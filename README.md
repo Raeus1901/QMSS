@@ -2,9 +2,12 @@
  I appreciate you stumbled upon my page and chose to take a look. My name is Jean, and I am current graduate student at Columbia University in the Quantitative Methods in Social Sciences (QMSS) departement. I am originally from France, Paris but I am also half-Argentinean. This git page will provide you with the coding I did part of my program. You can find me on [![LinkedIn][3.2]][2]. 
 
 
+## Tools and Qualifications 
+![](https://img.shields.io/badge/<Spoken Languages>-<French, English Spanish>-informational?style=flat&logo=<LOGO_NAME>&logoColor=white&color=2bbc8a)
 
 ## 📊 Data analysis 
 ## ⏱️ Time series analysis 
+
 
 
 [3.2]: https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/linkedin-3-16.png (LinkedIn icon without padding)
