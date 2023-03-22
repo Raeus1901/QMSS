@@ -1,0 +1,58 @@
+
+
+
+### 1. Use the table command, summary or describe commands, to tabulate one variable; and explain your results.
+## I used the table command along with summary 
+
+setwd("/Users/jean/Desktop")
+gss = read.csv("GSS.2006.csv")
+
+names(names) ## what variables are in here? "vpsu" and "vstrat" etc.
+##View(gss) ## look at it as a spreadsheet
+
+table(gss$whichsci) # 74 people strongly agree that researchs from industry scientists are less reliable than those from university scientists (1), to a smaller extent to people who strongly disagree with this statement (4)
+
+summary(gss$whichsci) ## mean is of 2.695, implying people tend to disagree with this stamement on average. 
+
+prop.table(table(gss$whichsci)) ## Gives exact percentage for the respondent answer to the statement by. 
+
+options(digits=2) ## Command to round to the hundredths
+
+prop.table(table(gss$whichsci)) ## this gives us a easier to read proportion to the sample. 
+
+#options(digits=7) ## what if I want to get back to my original level.  Default is 7.
+
+
+### 2. Using either the plyr or doBy commands, compare the means and standard deviations for one variable, for at least two sub­groups; and explain your results.  
+## I used DoBy command 
+
+library(plyr)
+
+ddply(gss, "race", summarise, Mean = mean(helpenv, na.rm = T), SD = sd(helpenv, na.rm = T))
+
+##install.packages("doBy")  ## install this package, this is going to do the same thing as using plyr above
+
+library(doBy)
+
+summaryBy(helpenv~race, data=gss, FUN=c(mean, sd), na.rm=T) #Black people tend to think less neutral about the role of the government in sustaining the environment by a difference of 0.2529 points relative to White people on average. Other races are likely in believing the government is more sucessful than black and white people think, with an average of 2.8663 among respondents. 
+
+options(digits=5)
+
+boxplot(helpenv~race, data=gss) 
+
+##install.packages("ggplot2") ## this program will make a fancy boxplot instead; same results as above
+library(ggplot2)
+
+p = ggplot(gss, aes(factor(race), helpenv))
+p + geom_boxplot() + geom_jitter()
+p + geom_boxplot(aes(fill = factor(race))) ## see how they include the NAs, which are the missings
+
+
+### 3. Using the gmodels or another command, cross­tabulate two categorical or ordinal variables (getting proportions); and explain your results.  
+
+##install.packages("gmodels")  ## install this package, if you haven't already
+library(gmodels)
+
+CrossTable(gss$toofast, gss$nextgen, prop.r=F, prop.c=T, prop.t=F, prop.chisq=F, format="SPSS") ## Finding a correlation between thinking science makes ouf life changing too fast and believing sciences and technlogies will bring more opportunities to the future generations. 
+#1792 valid responses to both of these questions. 
+#
