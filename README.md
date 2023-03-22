@@ -1,8 +1,11 @@
 # 🌴 Hello stranger !🌴
- I appreciate you stumbled upon my page and chose to take a look. My name is Jean, and I am current graduate student at Columbia University in the Quantitative Methods in Social Sciences (QMSS) departement. I am originally from France, Paris but I am also half-Argentinean. This git page will provide you with the coding I did part of my program. You can find me on linkedin if you want to connect. 
-
-<img align="center" src="https://github-readme-stats.vercel.app/api/<CARD_TYPE>/?username=<USERNAME>&theme=<THEME_NAME>" />
+ I appreciate you stumbled upon my page and chose to take a look. My name is Jean, and I am current graduate student at Columbia University in the Quantitative Methods in Social Sciences (QMSS) departement. I am originally from France, Paris but I am also half-Argentinean. This git page will provide you with the coding I did part of my program. You can find me on [![LinkedIn][3.2]][3]. 
 
 
-# 📊 Data analysis 
-# ⏱️ Time series analysis 
+
+## 📊 Data analysis 
+## ⏱️ Time series analysis 
+
+
+[2.2]: https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/linkedin-3-16.png (LinkedIn icon without padding)
+[2]: https://www.linkedin.com/in/jean-treves-bbaa91257
