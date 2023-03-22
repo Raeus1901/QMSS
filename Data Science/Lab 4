@@ -1,0 +1,78 @@
+##---- R Lab #4 -----
+
+##1. Run a simple regression, and interpret your results.  (Did the results fit your expectations?  Why?  Why not?)
+
+##2. Add an interaction term to that model that you think might moderate the original relationship between X1 and X2.  Explain why you think an interaction might be present and in what direction it would work.  Explain your results.  Did it work out?  Yes?  No?
+
+
+### I wanted initially to use numeric variables in the models to make them easier to understand, relative to the data.Unfortunately, this made my Anova model not working. I had to keep the variables as they were instead. 
+
+setwd("/Users/jean/Desktop")
+
+w = read.csv("WVS.csv") ## choose WVS survey ##
+
+install.packages("plyr")
+library(plyr)
+
+w = rename(w, c("V194"="sciencexfaith")) ## We depend too much on science and not enough on faith; look it up here: http://www.worldvaluessurvey.us/WVSOnline.jsp ## ##
+w$rsciencexfaith = 11-w$sciencexfaith
+w$rsciencexfaith.lab <- ordered(w$rsciencexfaith, levels = c(1,2,3,4,5,6,7,8,9,10), labels = c("Agree completely", "2", "3","4","5","6","7","8","9", "completely Disagree")) #Reverse the order to make it easier to understand, relative to its independent variables
+table(w$rsciencexfaith.lab) # 1 is for completely Agree - 10 stands for Completely disagree
+
+table(w$sciencexfaith) # Comparasion with previous tablee 
+
+w = rename(w, c("V242"="age"))
+w = rename(w, c("V2"="country"))
+
+
+##1. Run a simple regression, and interpret your results.  (Did the results fit your expectations?  Why?  Why not?)
+
+## Does one's age and country (Germany vs. Turkey) affect the extent in trusting science over religion ?  ##
+lm1 = lm(as.numeric(rsciencexfaith.lab) ~ age + as.factor(country), data=w, subset = (country==276 | country==792))
+summary(lm1)
+
+# The average German has a score of 7 when considering no additional variables. Germand tend to trust more science than faith.
+# Each additional year aging from 18 years old bring a decrease in trust to science by -0.0062 points, on average. Turkey residents tend to trust less science than Germans on average, by -1.74 points.
+# Turkey might have a higher score because of a higher predominance of Islam than Christianity is in Germany. People tend to be more religious in Turkey, especially outstide of Istabul, generating higher trust to religion than science.
+
+
+##Let's draw a comparision between on how much you trust science compared between a 30 years old and a 65 years old.
+
+as.factor(dim(w$V242))
+
+w$thirty <- ifelse(length(w$V242) == 0, NA, ifelse(w$V242==30, 1,0))
+w$sixtyfive <- ifelse(length(w$V242) == 0, NA, ifelse(w$V242==65, 1,0))
+
+w$thirty=ifelse(w$V242==30, 1,0)
+w$sixtyfive = ifelse(w$V242==65, 1, 0)
+
+## Since lm1 generates surprising results, what about: Does one's age and country (US vs. China) affect how comfortable they are working for a 70-year old? ##
+lm2 = lm(as.numeric(rsciencexfaith.lab) ~ thirty + sixtyfive +  as.factor(country), data=w, subset = (country==276 | country==792))
+summary(lm2)
+
+w = rename(w, c("V10"="satisfaction")) #
+
+## Let me control for overall level of life satisfaction differences, too ##
+lm3 = lm(as.numeric(rsciencexfaith.lab) ~ age + as.factor(country) + satisfaction, data=w, subset = (country==276 | country==792))
+summary(lm3)
+
+## Let's add a final variable associated with politics and gender rights
+
+w = rename (w, c ("V139"="democraticwomen"))
+
+lm4 = lm(as.numeric(rsciencexfaith.lab) ~ age + as.factor(country) + satisfaction + democraticwomen, data=w, subset = (country==276 | country==792))
+summary(lm4)
+
+# For each additional category in trust to science over religion, someone fells by 0.059 additional points more satisfied by life on average. Happier people tend to be more trustfull to science.
+
+##2. Add an interaction term to that model that you think might moderate the original relationship between X1 and X2.  Explain why you think an interaction might be present and in what direction it would work.  Explain your results.  Did it work out?  Yes?  No?
+
+lm5 = lm((as.numeric(rsciencexfaith.lab)) ~  age + as.factor(country) + satisfaction*democraticwomen, data=w, subset = (country==276 | country==792))
+summary(lm5)
+
+anova(lm4, lm5) ## Did adding the interaction improve my model? ##
+
+
+
+
+
