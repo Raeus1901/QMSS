@@ -1,0 +1,98 @@
+setwd("/Users/jean/Desktop")
+
+g = read.csv("GSS.2006.csv")
+
+
+## 1. Run a simple bivariate regression, and interpret your results.  (Did the results fit your expectations?  Why?  Why not?)  
+
+g$educ = (g$educ)/1 #education ranges from 0 to 20.
+
+plot(as.factor(g$satjob), g$educ) ##  satjob asked On the whole, how satisfied are you with the work you do--would you say you are very satisfied, moderately satisfied, a little dissatisfied, or very dissatisfied?" 1 being most satified and 4 to least satisfied
+lm1 = lm(satjob ~ educ , data=g )
+summary(lm1)
+
+## For each additional year in education, a person becomes 0.023 points more satisfied about his/heré job, on average
+
+
+## 2. Add an additional variable that might mediate or partly "explain" the initial association from that simple regression above -- and explain your results.  Did it work out?  Yes?  No? 
+
+## Education seems to be a keytakeaway in expericing satisfaction in work. However, perhaps people who experience many tasks in their work would find it more exciting and so satisfying. The variable respond to the following statement: "I get to do a number of different things on my job" for which the lowest category corresponds to many tasks. 
+
+plot(as.factor(g$workdiff), g$educ)
+
+lm2 = lm(satjob ~ educ + workdiff, data=g)
+summary(lm2)
+
+## Net of individual satisfaction in the workplace, for each category more in the less they have diversified task, individuals on average experience 0.22 points less satisfaction in their job. 
+## The workdiff variable increases the educ variable by 0.0128 points. The R-squared value also increased by more than 0.03 points. Perhaps there is exists other variables creating a strong mediating effect.  
+
+
+## install.packages("stargazer")
+library(stargazer)
+stargazer(lm1, lm2, type = "text")
+
+
+## You can use other files than just the .csv I have given you.  Look at this STATA file ...
+
+## 3. Run another multiple regression.  Tell me how you expect your dependent variable to be affected by the independent variables.  Interpret your results.
+
+
+## install.packages("plyr")
+library(plyr)
+
+
+d = read.csv("WVS.csv") ## choose the WVS.csv from Lab 3 ##
+
+## What variables are here?  Look here to find out: http://www.worldvaluessurvey.org/WVSOnline.jsp
+## Or look here: http://www.thearda.com/Archive/Files/Codebooks/WVS2010_CB.asp
+
+## Here is a question about "Using this card, would you please indicate for each description whether that person is very much like you, like you, somewhat like you, not like you, or not at all like you? It is important to this person to have a good time; to 'spoil' oneself (V73)" with higher scores meaning less like me 
+
+
+d = rename(d, c("V107"="trust")) # trusting people of different nationality with 1 the highest
+d$rtrust = 5-d$trust
+d$rtrust.lab <- ordered(d$rtrust, levels = c(1,2,3,4), labels = c("trust completely", "2", "3"," no trust at all"))
+table(d$rtrust.lab)
+
+d = rename(d, c("V23"="satisfaction")) ## life satisfaction
+d$sclass=ifelse(d$V238==4, 1,0) ## only considers lower-middle class
+d$supervised=ifelse(d$V234==2, 1, 0) ## people supervised by others at work
+d = rename(d, c("V136"="civil")) ## this asks whetever your one of your parent is an immigrant i n the US
+
+## Here is a regression predicting if you want to spoil yourself as a function of age, sex, and marital status
+## We did this for Australia and only if people also answered about ses
+
+lm1 = lm(as.numeric(rtrust.lab) ~ satisfaction + sclass + supervised, d, subset=V2==840 & !is.na(civil))  ## This is for the USA ##
+summary(lm1)
+
+
+## 4. Now add another independent variable to that model in Question 3, preferably a set of dummy variables.  Tell me why you added that new set of variables and what effect you expected them to have.  Did they have an effect?  Interpret that new model.  ##
+
+lm2 = lm(as.numeric(rtrust.lab) ~ satisfaction + sclass + supervised + as.factor(civil), d, subset=V2==840)  ## This is for the USA ##
+summary(lm2)
+
+
+## 5. Now run a partial F test comparing the model in Question 3 to the model in Question 4.  Does the F test support the idea of adding those new variables?  Why?  Why not? ##
+
+anova(lm1, lm2)
+
+## hopefully, you recognize that the partial F is just the square of the t-statistic on civil
+
+## or ##
+
+lm3 = lm(as.numeric(rtrust.lab) ~ satisfaction + sclass + supervised + as.factor(civil), d, subset=V2==840)
+summary(lm3)
+
+anova(lm1, lm3)
+
+## hopefully, you recognize that the partial F is now for each category of ses.  As a whole, do the ses categories add to the predictive power of the model?
+
+
+## or ... I could break ses into high, medium and low ##
+
+d$civil.cat = cut(d$civil, breaks = c(-1, 4, 7, 10), label=c("non-democratic","democratic","essential-democratic")) 
+
+lm4 = lm(as.numeric(rtrust.lab) ~ satisfaction + sclass + supervised + civil.cat, d, subset=V2==840)
+summary(lm4)
+
+anova(lm1, lm4)
