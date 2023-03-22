@@ -3,8 +3,7 @@
 
 
 ## Tools and Qualifications 
-![](https://img.shields.io/badge/<Spoken Languages>-<French, English Spanish>-informational?style=flat&logo=<LOGO_NAME>&logoColor=white&color=2bbc8a)
-
+https://img.shields.io/github/languages/top/Raeus1901/QMSS?logo=R
 ## 📊 Data analysis 
 ## ⏱️ Time series analysis 
 
