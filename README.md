@@ -3,7 +3,7 @@
 
 
 ## Tools and Qualifications 
-https://img.shields.io/github/languages/top/Raeus1901/QMSS?logo=R
+
 ## 📊 Data analysis 
 ## ⏱️ Time series analysis 
 
