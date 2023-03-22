@@ -1,0 +1,187 @@
+
+				Appendix: Full code
+
+## ---- R Lab Assignment #2 -----
+##
+## based on data from here:  http://www.thearda.com/Archive/Files/Codebooks/GSS2006_CB.asp
+
+## Answer these six questions as best you can:
+
+## 1. Recode 1 *sort of* continuous variable into categories.  Tell me what you did and explain the variable(s).
+
+## 2. Recode 1 another variable and attach value labels.  Tell me what you did and explain the variable(s).
+
+## 3. Use one (or both) of your recoded variables to do a cross-tabulation (as you had done last week, with prop.table, doBy, or ddply). Explain your results.
+
+## 4. Run a linear regression with 1 independent and 1 dependent variable.  Make all of the recodes necessary to make the model as easy to interpret as possible.  And explain your results.
+
+## 5. Plot two variables, either as a scatter plot or boxplot.  Explain your results.
+
+## 6. Tell me two theories/ideas you might want to test in this course. Do you have a dataset for these ideas/theories already? Do you have it in R- or Python-readable format already? What is your main independent variable? What is your main dependent variable?  Send me an email with the subject "Independent Project Ideas - [your name]" to gme2101@columbia.edu
+
+#######################################
+
+## You can start by setting a working directory for all your files and programs
+## If you are using a PC, you have to replace each / with two //
+
+setwd("/Users/jean/Desktop")
+
+gss = read.csv("GSS.2006.csv")
+
+
+## 1. Recode 1 *sort of* continuous variable into categories.  Tell me what you did and explain the variable(s).
+
+## A. The simplest way to make a dummy variable:
+
+gss$hi.spwrksta = ifelse((gss$spwrksta>2), 1, 0) ## binary recode, where we make it 1 if "Last week was your (wife/husband) working full time, part time, going to school, keeping house, or what?" is everything as frequent as 3 or more, which is not temporarily not working or just not working at all, 0 otherwise
+
+table(gss$hi.spwrksta, gss$spwrksta) ## check the recoding:  It is 0 for all categories less than 4 and 1 for everything greater than or equal to 4
+
+#Wanted to highlight the number of women currently present in the labour market. Notice how there is more women staying at home than currently working part time
+
+## B. Breaking a variable into categories:
+
+gss$spwrksta.cat = cut(gss$spwrksta, breaks = c(-1, 2, 4, 7), label=c("working","not working","retired"), ordered=TRUE) ## create a number of categories for religious attendance ##
+
+table(gss$spwrksta.cat, d$spwrksta) ## check the recoding, and see that
+
+#Categorized women' working status in three categories. The number of retired women is considerably higher than the ones not working but still looking for jobs in the labour market. 
+## Did not consider the "other" category 
+
+## C. Coding multiple conditions:
+
+gss$bothftw = ifelse(( gss$race==2 & gss$wrkslf==1), 1, 0) ## an example with multiple conditions at once, both self-employed and black ##
+
+table(gss$bothftw, gss$race, gss$wrkslf)
+
+#46 black people self-employed. Low compared to whites, who are 407 self-employed. Whites are are on average 10x times more likely to be self-employed than blacks
+#In comparision, 546 blacks work for someone else against 2770 whites. Whites are almost 5 times more likely to employed against a black.
+# In reality, it seems more likely someone black works for someone else than for himself
+
+
+
+## D. Another way to apply multiple labels:  make it 1 if you follow Easter religions, 0 if you don't
+
+gss$eastern[gss$relig==1 ] <- 0
+gss$eastern[gss$relig==2 ] <- 0
+gss$eastern[gss$relig==3 ] <- 0
+gss$eastern[gss$relig==4 ] <- 0
+gss$eastern[gss$relig==5 ] <- 0
+gss$eastern[gss$relig==6 ] <- 1
+gss$eastern[gss$relig==7 ] <- 1
+gss$eastern[gss$relig==8 ] <- 1
+gss$eastern[gss$relig==9 ] <- 0
+gss$eastern[gss$relig==10 ] <- 0
+gss$eastern[gss$relig==11 ] <- 0
+gss$eastern[gss$relig==12 ] <- 0
+gss$eastern[gss$relig==13 ] <- 0
+
+table(gss$eastern, gss$relig) ## check against the original
+
+#In total, 44 followed eastern religions in 2006. In comparision, catholics were 25 times more frequent as they were 1114
+
+## E. Changing to missing values
+## The answers to How scientific are each of the following fields? If you have not heard of a particular field, just say you haven’t heard of it D. Accounting. Is accounting very scientific, pretty scientific, not too scientific, or not scientific at all?" and 5="Haven't heard of it (Vol.)", so we want to make that a missing answer.
+
+gss$account.new = gss$accntsci
+gss$account.new[gss$accntsci==5] <- NA
+
+table(gss$accntsci, gss$account.new)
+
+#Deleted the remaining 12 missing values from the variable. 
+
+
+## 2. Recode 1 other variable and attach value labels.  Tell me what you did and explain the variable(s).
+
+## A. Add labels to existing variables:
+
+gss$hi.spwrksta.lab <- ordered(gss$hi.spwrksta, levels = c(0,1), labels = c("low", "high")) ## using the hi.attend variable from above ##
+
+table(gss$hi.spwrksta.lab, gss$hi.spwrksta)
+
+## B. Reverse code a variable and then add labels and make it ordered:
+
+
+gss$rnatenvir = 4-gss$natenvir ## to reverse code a variable, do this ... (highest category + 1) - orginal_variable ##
+
+gss$rnatenvir.fact = as.factor(gss$rnatenvir) ## make this new numeric variable into a factor ##
+
+gss$lab.rnatenvir <- ordered(gss$rnatenvir, levels = c(1,2,3), labels = c("way enough", "right enough", "not enough")) ## make that factor variable into an ORDERED factor, with value labels ##
+
+table(gss$lab.rnatenvir, gss$rnatenvir)
+
+mean(gss$natenvir, na.rm=T) ## the original variable, not enough, was numeric, so we can get the mean ##
+
+mean(as.numeric(gss$lab.rnatenvir), na.rm=T) ## the new variable, lab.rnatenvir, is an ordered factor -- and we need to tell R to treat it like a number, hence, the as.numeric) ##
+
+## 3. Use one (or both) of your recoded variables to do a cross-tabulation (like last week, with prop.table, doBy, or ddply). Explain your results.
+
+gss$hi.spwrksta = ifelse((gss$spwrksta>2), 1, 0) ## as before ##
+
+gss$hi.nature = ifelse((gss$natenvir>1), 1, 0) ## this is a question about "are we spending too much, too little, or about the right amount on B. Improving and protecting the environment" and people who say they think the environmental budget is enough or too much are coded 1, otherwise 0.
+
+## install.packages("gmodels")
+
+library(gmodels)
+
+CrossTable(gss$hi.spwrksta, gss$hi.nature, prop.r=F, prop.c=T, prop.t=F, prop.chisq=F, format="SPSS")  ## the results indicate that being more thorough is not associated with going to religious services more, which is what some psychological theories would have predicted
+
+
+
+## 4. Run a linear regression with 1 independent and 1 dependent variable; make all of the recodes necessary to make the model as easy to interpret as possible; and explain your results.
+
+## install.packages("psych")
+
+library(psych)
+
+describe(gss$reliten) ## respondent's praying frequency ##
+
+describe(gss$partyid) ## respondent's party identification##
+
+## How do you think religious frequency is related to political affiliation?
+
+
+lm1 = lm(partyid ~ reliten, data=gss) ## predicting one's hours from their spouse's ##
+summary(lm1) ## examine the results: a coefficient of 0.04662 indicates no obvious relationship between my hours and my spouse's hours ##
+
+
+## 5. Plot two variables, either as a scatter plot or boxplot; add in trend/regression lines; and explain your results.
+
+
+plot(gss$sppres80, gss$hrs2, main="Scatterplot Example",
+     xlab="Spouse prestige", ylab="Numbers of hours usually worked per week", pch=19) ## scatter X and Y ##
+
+abline(lm(hrs2 ~ sppres80, data=gss), col="red") ## add in a regression line ##
+
+
+## -- or ---
+
+plot(jitter(gss$sppres80), jitter(gss$hrs2), main="Scatterplot Example",
+     xlab="Spouse prestige", ylab="Hours", pch=19) ## same as above, but jitter the points ##
+
+abline(lm(hrs2 ~ sppres80, data=gss), col="red") ## add in a regression line ##
+
+
+## -- or (for a boxplot) ---
+
+plot(d$sex, gss$pray, main="Scatterplot Example",
+     xlab="Sex", ylab="Hours", pch=19) ## this creates a scatter ##
+
+plot(as.factor(d$sex), d$hrs1, main="Scatterplot Example",
+     xlab="Sex", ylab="Hours", pch=19) ## this creates a box plot ##
+
+mean(d[d$sex == 1, 'hrs1'], na.rm=T)
+describe(d[d$sex == 1, 'hrs1']) ## respondent's work hours ##
+
+## ----- other useful graphing codes ----
+
+hist(d$hrs1) ## draws a histogram ##
+
+dense <- density(d$hrs1, na.rm=T) # returns the density data
+plot(dense) # plots the results as a kernel density plot
+
+## install.packages("ggplot2")
+library(ggplot2)
+ggplot(d, aes(x=d$sphrs1, y=d$hrs1)) + ## Another scatter plot
+  geom_point(shape=1)      +    # Use hollow circles
+  geom_smooth(method=lm)   # Add linear regression line
