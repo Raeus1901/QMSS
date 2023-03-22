@@ -1,0 +1,109 @@
+Appendix 
+
+
+
+# library
+install.packages("moments")
+library(moments)
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(tidyverse)
+
+setwd("/Users/jean/Desktop")
+
+# read in the data
+g = read.csv("midterm_data_2023EA.csv")
+
+
+#2:Pm mean is 13.71
+summarise(g, mean(pm))  
+IQR(g$pm)
+
+
+#3: basic histogram ; skewed right (positively)
+ggplot(data = g, aes(x=pm)) +
+  geom_histogram(binwidth=3, fill="#69b3a2", color="#e9ecef", alpha=0.9) 
+
+#Used the package "moments" as basic R did not provide functions for kurtosis and skewness
+skewness(g$pm) 
+kurtosis(g$pm)
+
+#4: 
+g %>% 
+  group_by(region) %>% 
+  summarize(avg_PM_exposure = mean(pm))
+
+#5: 
+lm1 = lm(weight ~ pm , data=g )
+summary(lm1)
+
+#6: 
+
+
+lm2 = lm(weight ~ pm + temp + rh, data=g )
+summary(lm2)
+
+#7: 
+
+lm3 = lm(weight ~ pm*temp + rh, data=g )
+summary(lm3)
+
+newdata <- data.frame(pm = c(0, 10, 25), temp = mean(g$temp), rh = mean(g$rh))
+
+predictions <- predict(lm3, newdata = newdata)
+
+predictions
+
+#8: 
+
+summarise(g, mean(height))  
+
+summarise(g, mean(weight))  
+
+#9: 
+
+g$m = g$height/100
+g$bmii = (g$weight / g$m*g$m)
+
+lm4 = lm(bmii ~ pm + rh + temp, data=g )
+summary(lm4)
+
+
+#10
+
+summarise(g, mean(length))  
+
+g$modified_bmi <- g$weight / ((g$height + g$length) / 2) 
+
+lm5 = lm(modified_bmi ~ pm + rh + temp, data=g )
+summary(lm5)
+
+#11
+
+g$region <- relevel(factor(g$region), ref = "Sow Falls, SD")
+
+lm6 = lm(weight ~ pm + temp + rh + as.factor(region), data=g )
+summary(lm6)
+
+
+#12
+
+# Plot the residuals
+plot(resid(lm5), col = "blue", pch = 10,
+     xlab = "Fitted values", ylab = "Residuals",
+     main = "Residual plot for modified BMI")
+abline(0,0)
+
+
+#13
+install.packages ("splines")
+library(splines)
+
+g$temp.ns = ns(g$temp, df=4)
+g$rh.ns = ns(g$rh, df = 4)
+
+lm7 = lm(weight ~ pm + temp.ns + rh.ns, data = g)
+summary(lm7)
+
+
