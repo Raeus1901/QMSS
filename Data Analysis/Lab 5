@@ -1,0 +1,137 @@
+## ---- R Lab #5 -----
+
+
+## 1. Run a multiple linear probability model.  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results.  Were your expectations correct?  Why or why not?
+
+## 2. Run a multiple (binary) logistic model.  (It can be the same as the above LPM or -- even better -- a new model.)  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results in the logit scale.  Were your expectations correct?  Why or why not?
+
+## 3. Get odds ratios from your logit model in Question 2 and interpret some of them.  
+
+## 4. Get predicted probabilities from your logit model in Question 2 for some constellations of X values and interpret the results.  
+
+setwd("/Users/jean/Desktop")
+
+d <- read.csv(file.choose("GSS.2006.csv")) ## choose the 2006 GSS ##
+
+## The question is what are some things that predict "How often do you read the newspaper--every day, a few times a week, once a week, less than once a week, or never?" ranging from every day to never.
+
+sub <- d[, c("news", "age", "educ", "sex", "rincome", "babies", "partyid")]
+
+sub <- na.omit(sub) ## get rid of all missings; necessary for predictions later ##
+
+sub$newspaper = ifelse(sub$news==1, 1, 0) ## only look at "always Every day" vs. everything else; 369 persons read newspapers every day on average, whereas 190 read less than everyday. Notice the data is filtered so it only includes respondent that responded to every question associated with variables considered in the subset. 
+
+table(sub$newspaper)
+
+## 1. Run a multiple linear probability model.  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results.  Were your expectations correct?  Why or why not?
+
+lm1 = lm(newspaper ~ educ + age + sex + babies + rincome, sub, subset= partyid==0)
+summary(lm1)
+
+## 2. Run a multiple (binary) logistic model.  (It can be the same as the above LPM or @-- even better -- a new model.)  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results in the logit scale.  Were your expectations correct?  Why or why not?
+
+logit1 = glm(newspaper ~ educ + age + sex + babies + rincome, sub, subset= partyid==0, family=binomial)
+summary(logit1)
+
+## 3. Get odds ratios from your logit model in Question 2 and interpret some of them.  
+
+exp(coef(logit1))
+
+## 4. Get predicted probabilities from your logit model in Question 2 for some constellations of X values and interpret the results.  
+
+predict(logit1, type = "response", newdata = data.frame(educ = c(13,20), age = c(30, 30), sex = c(2, 2), babies = c(0,0), rincome = c(5, 12)))
+
+predict(logit1, type = "response", newdata = data.frame(educ = c(13,20), age = c(30, 45), sex = c(2, 2), babies = c(1,1), rincome = c(5, 12)))
+
+predict(logit1, type = "response", newdata = data.frame(educ = c(13,20), age = c(35, 50), sex = c(1, 1), babies = c(0,2), rincome = c(5, 10)))
+
+predict(logit1, type = "response", newdata = data.frame(educ = c(10,15), age = c(35, 50), sex = c(1, 1), babies = c(0,2), rincome = c(5, 8)))
+
+## the below will get it for any combination of variables and everything else set to means ##
+
+pred.dat <- with(sub, expand.grid( 
+  educ = sort(unique(educ)),
+  age = mean(age),
+  sex = sort(unique(sex)),
+  rincome = mean(rincome),
+  babies = sort(unique(babies))))
+
+
+### This function is from QMSS package 
+
+#' Predicted probabilities and confidence intervals from logit or probit model
+#'
+#' @param model A \code{\link[stats]{glm}} model fit with \code{binomial} family and 
+#' either a \code{logit} or \code{probit} link function.
+#' @param predData A data frame to pass to \code{\link[stats]{predict.glm}} in which to look 
+#' for variables with which to predict. 
+#' @param ci Logical value indicating whether to compute confidence intervals. 
+#' @param level The confidence level to use if \code{ci} is \code{TRUE}. 
+#' @return A data frame with \code{predData} and the associated predicted probabilities. 
+#' Confidence intervals are included if argument \code{ci} is \code{TRUE}. 
+#' @author Jonah Gabry <jsg2201@@columbia.edu>
+#' @export
+#' @examples
+#' GSS_2010$Y <- with(GSS_2010, 
+#'                    cut(realinc, 
+#'                    breaks=c(-Inf, median(realinc, na.rm = T), Inf), 
+#'                    labels=c("Low", "High")))
+#' logitmodel <- glm(Y ~ age + educ, data = GSS_2010, family = binomial)
+#' probitmodel <- glm(Y ~ age + educ, data = GSS_2010, family = binomial(link = "probit"))
+#' predData <- data.frame(age = 20, educ = 15)
+#' predProb(logitmodel, predData, ci = F)
+#' predProb(probitmodel, predData, ci= F)
+#' predData <- expand.grid(age = c(20, 50, 80), educ = c(5, 10, 15))
+#' predProb(logitmodel, predData, ci = T)
+#' predProb(probitmodel, predData, ci= T)
+
+predProb <- function(model, predData, ci = TRUE, level = 0.95){
+  
+  link <- model$family$link
+  bad_link <- !(link %in% c("logit", "probit"))
+  
+  if (bad_link) {
+    stop("Link function should be 'logit' or 'probit'")
+  }
+  
+  fun <- ifelse(link == "probit", "pnorm", "plogis")
+  
+  if (ci == FALSE){
+    preds <- predict(model, type = "response", newdata = predData)
+    preds <- cbind(predData, PredictedProb = preds)
+    return(preds)
+  }
+  else {
+    temp <- predict(model, type = "link", se = TRUE, newdata = predData)
+    fit <- temp$fit
+    se <- temp$se.fit
+    p <- (1 - level)/2
+    p <- c(p, 1-p)
+    PredictedProb <- do.call(fun, args = list(q = fit))
+    ci1 <- do.call(fun, args = list(q = fit + qnorm(p[1])*se))
+    ci2 <- do.call(fun, args = list(q = fit + qnorm(p[2])*se))
+    CI <- cbind(ci1, ci2)
+    colnames(CI) <- paste0(paste(100*p), "%")
+    preds <- cbind(predData, PredictedProb, CI)
+    return(preds)
+  }
+}
+
+
+predProb(logit1, predData = pred.dat, ci = F)
+
+## visualize your probabilities ##
+
+sub$rin = as.factor(sub$rincome)
+logit2 = glm(newspaper ~ educ + age + sex + babies + rin, sub, subset= partyid==0, family=binomial)
+summary(logit2)
+
+install.packages("visreg")
+library(visreg)
+visreg(logit2, "educ", by = "rin", 
+       partial = F, overlay = T, 
+       xlab = "years of education", 
+       ylab = "Predicted probability", 
+       scale= "response",
+       type="conditional",
+       alpha=.05) ## 
