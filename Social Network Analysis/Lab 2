@@ -1,0 +1,178 @@
+library(igraph)
+
+setwd("/Users/jean/Desktop")
+
+#  Import Lazega friend adjacency matrix
+lazega_friends_matrix <- as.matrix(read.csv(file.choose("Lazega-Friends%2B-%2BSheet1.csv") ,header=TRUE,row.names=NULL,check.names=FALSE))
+
+#  Create igraph object from this matrix, "undirected" will put a maximum of 1
+#  for both edges (A->B and B->A) if either edge has a 1; other options are 
+#  available, including "directed", "max", "min", etc 
+lazega_friends_graph <- graph.adjacency(lazega_friends_matrix,mode="directed",weighted=NULL)
+
+# import Lazega vertex attribute data (as a data.frame)
+lazega_attributes <- read.csv(file.choose("Lazega-Atts.csv"), header=TRUE) # see  Lazega-atts.csv  on Courseworks
+
+# attach the attributes to the Vertices of the igraph
+vertex_attr(lazega_friends_graph, index=lazega_attributes$ID) <- lazega_attributes
+# `index=lazega_attributes$ID" is only necessary if the order of the vertices and
+#  the order of the attributes might be different. Better safe than sorry!
+
+# calculate degree
+lazega_attributes <- merge(lazega_attributes,  #  Merge lazega_attributes
+                           data.frame(  # With a new data.frame
+                             ID=V(lazega_friends_graph)$ID,  # Where the ID is the ID of each vertex
+                             degree= degree(lazega_friends_graph) # and the degee is its degree
+                           ),
+                           by='ID')
+
+head(lazega_attributes)
+
+density <- graph.density(lazega_friends_graph, loops = FALSE)
+
+# print the density of the graph
+cat("The density of the graph is", round(density, 4))
+
+# calculate other centrality measures
+lazega_attributes <- merge(lazega_attributes,  #  Merge lazega_attributes
+                           data.frame(  # With a new data.frame
+                             ID=V(lazega_friends_graph)$ID,  # Where the ID is the ID of each vertex
+                             in.deg= degree(lazega_friends_graph, mode = c("in"), loops = TRUE, normalized = FALSE),
+                             out.deg= degree(lazega_friends_graph, mode = c("out"), loops = TRUE, normalized = FALSE),
+                             btwn= betweenness(lazega_friends_graph, directed = F),
+                             close = closeness(lazega_friends_graph, mode = c("all")),
+                             eigen <- evcent(lazega_friends_graph),
+                             bon <- bonpow(lazega_friends_graph)
+                           ),
+                           by='ID')
+
+names(lazega_attributes )
+
+# clean up the dataframe
+lazega_attributes = lazega_attributes[,c(1:14, 36)]
+
+# change the bon centrality name
+names(lazega_attributes)[names(lazega_attributes)=="bon....bonpow.lazega_friends_graph."] <- "bon"
+
+# correlate the measures
+cor(lazega_attributes)
+
+## I want to find the most central nodes ##
+
+# sort by degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$degree, decreasing = TRUE), ]
+cat("Nodes with highest degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by in-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$in.deg, decreasing = TRUE), ]
+cat("Nodes with highest in-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by out-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$out.deg, decreasing = TRUE), ]
+cat("Nodes with highest out-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by betwness-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$btwn, decreasing = TRUE), ]
+cat("Nodes with highest betwness-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by close-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$close, decreasing = TRUE), ]
+cat("Nodes with highest close-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by eigen-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$vector, decreasing = TRUE), ] #eigen is referred as vector in the data 
+cat("Nodes with highest eigen-degree centrality:\n")
+print(head(lazega_attributes))
+
+
+# sort by bon-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$bon, decreasing = TRUE), ] #eigen is referred as vector in the data 
+cat("Nodes with highest bon-degree centrality:\n")
+print(head(lazega_attributes))
+
+
+## NOW, I want to find the least central Node ##
+# How to do it ? Simply assigns a False to decreasing or just remove it
+
+# sort by degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$degree, decreasing = FALSE), ]
+cat("Nodes with lowest degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by in-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$in.deg, decreasing = FALSE), ]
+cat("Nodes with lowest in-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by out-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$out.deg, decreasing = FALSE), ]
+cat("Nodes with lowest out-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by betwness-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$btwn), ]
+cat("Nodes with lowest betwness-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by close-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$close), ]
+cat("Nodes with lowest close-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by eigen-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$vector, decreasing = FALSE), ] #eigen is referred as vector in the data 
+cat("Nodes with lowest eigen-degree centrality:\n")
+print(head(lazega_attributes))
+
+# sort by bon-degree centrality
+lazega_attributes <- lazega_attributes[order(lazega_attributes$bon), ] #eigen is referred as vector in the data 
+cat("Nodes with lowest bon-degree centrality:\n")
+print(head(lazega_attributes))
+
+
+# regress attributes on centrality measures
+summary(lm(close ~ office + gender + seniority, lazega_attributes))
+
+summary(lm(vector ~ office + gender + seniority, lazega_attributes))
+
+
+summary(lm(degree ~ office + gender + seniority, lazega_attributes))
+
+
+## make a pretty graph of your network
+
+## start the graph ##
+set.seed(12134)
+l <- layout.kamada.kawai(lazega_friends_graph)
+
+# Plot undecorated first.
+par(mfrow=c(1,1))
+oldMargins<-par("mar")
+par(mar=c(1,1,1,1))
+### par(mar=oldMargins) ### to return to default ...
+
+# Differentiate two gender by shape
+V(lazega_friends_graph)$shape<-ifelse(V(lazega_friends_graph)$gender== 1, "circle", "rectangle")
+
+# Differentiate two status by color.
+V(lazega_friends_graph)$color<-ifelse(V(lazega_friends_graph)$status== 1, "white", "dodgerblue")
+
+# Differentiate two practices by label color.
+V(lazega_friends_graph)[V(lazega_friends_graph)$practice== 1]$label.color <- "red"
+V(lazega_friends_graph)[V(lazega_friends_graph)$practice== 2]$label.color <- "black"
+
+# Size node by in-degree.
+V(lazega_friends_graph)$size <- 4*sqrt(degree(lazega_friends_graph, mode="in"))
+V(lazega_friends_graph)$size2 <- V(lazega_friends_graph)$size * .5
+
+# Size of node label by out-degree.
+V(lazega_friends_graph)$label.cex <- 2.5 * degree(lazega_friends_graph, mode="out") / max(degree(lazega_friends_graph, mode="out"))
+
+plot(lazega_friends_graph, edge.arrow.size=0.3, edge.color="blue")
+
+
