@@ -4,7 +4,11 @@
 
 
 ## 📊 Data analysis 
+
 ## ⏱️ Time series analysis 
+
+## 🕸️ Social network analysis
+
 
 
 
