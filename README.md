@@ -6,6 +6,7 @@
 ## 📊 Data Science 
 
 [Lab 1](Data%20Science/Lab%201)
+
 [Lab 2](Data%20Science/Lab%202)
 [Lab 3](Data%20Science/Lab%203)
 [Lab 4](Data%20Science/Lab%204)
