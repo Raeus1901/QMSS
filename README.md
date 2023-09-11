@@ -8,10 +8,15 @@
 [Lab 1](Data%20Science/Lab%201)
 
 [Lab 2](Data%20Science/Lab%202)
+
 [Lab 3](Data%20Science/Lab%203)
+
 [Lab 4](Data%20Science/Lab%204)
+
 [Lab 5](Data%20Science/Lab%205)
+
 [Lab 6](Data%20Science/Lab%206)
+
 [Midterm](Data%20Science/Midterm)
 
 ## ⏱️ Time series analysis 
