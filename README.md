@@ -5,7 +5,7 @@
 
 ## 📊 Data Science 
 
-[Lab 1](QMSS/Data%20Science/Lab%201)
+[Lab 1](Data%20Science/Lab%201)
 
 ## ⏱️ Time series analysis 
 
