@@ -5,6 +5,8 @@
 
 ## 📊 Data analysis 
 
+github.com/<Raeus1901>/<QMSS>/blob/<Data Science>/Lab 1?plain=1.
+
 ## ⏱️ Time series analysis 
 
 ## 🕸️ Social network analysis
