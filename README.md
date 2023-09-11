@@ -9,6 +9,9 @@
 
 ## 🕸️ Social network analysis
 
+## 💡 Machine Learning 
+
+## 🤖 Natural Language Processing 
 
 
 
