@@ -5,7 +5,8 @@
 
 ## 📊 Data analysis 
 
-github.com/<Raeus1901>/<QMSS>/blob/<Data Science>/Lab 1?plain=1.
+[Lab 1](QMSS/Data%20Analysis/Lab%201)
+
 
 ## ⏱️ Time series analysis 
 
