@@ -23,7 +23,7 @@
 
 [Lab 2](Time%20Series/Lab%202)
 
-[Lab 2](Time%20Series/Lab%203)
+[Lab 3](Time%20Series/Lab%203)
 
 ## 🕸️ Social network analysis
 
