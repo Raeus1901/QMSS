@@ -21,6 +21,10 @@
 
 ## ⏱️ Time series analysis 
 
+[Lab 2](Time%20Series/Lab%202)
+
+[Lab 2](Time%20Series/Lab%203)
+
 ## 🕸️ Social network analysis
 
 [Lab 1](Social%20Network%20Analysis/Lab%201)
