@@ -1,155 +1,166 @@
 ## Time Series Lab
-## Questions: 1. Create a multivariate time series; perform any interpolations.
+
+## Questions:
+## 1. Create a multivariate time series; perform any interpolations.
 ## 2. Graph the relationships between X and Y. Explain how you think Y should relate to your key Xs.
 ## 3. Run a simple time series regression, with one X and no trend. Interpret it.
 ## 4. Run a time series regression with one X and trend. Interpret it. Perform autocorrelation diagnostics. Explain what you found.
 ## 5. Consider running a time series regression with many Xs and trend. Interpret that. Check VIF.
 ## 6. Run a first differenced time series regression. Interpret that.
 ## 7. Check your variables for unit roots. Do some tests. Interpret them.
-## 8. Perform an Automatic ARIMA on the residuals from one of your earlier models. Tell
-me what it says.
+## 8. Perform an Automatic ARIMA on the residuals from one of your earlier models. Tell me what it says.
 ## 9. Run an ARIMA that follows from Step 8. Interpret that, too.
+
 GSS = read.csv(file.choose()) ## choose the GSS Trends file. ##
-## install.packages("devtools", dependencies = TRUE) ## library(devtools)
+## install.packages("devtools", dependencies = TRUE)
+## library(devtools)
 ## install_github("jgabry/QMSS_package")
 ## install.packages("ggplot2")
-## install.packages("plyr") install.packages("car")
+## install.packages("plyr")
+install.packages("car")
 install.packages("fUnitRoots")
-#load packages library(QMSS) library(ggplot2) library(plyr) library(car) library(fUnitRoots) library(lmtest)
-## 1. Create a multivariate time series ##
-## For the Unites States, from 1975 to 1995, try to predict average positive response to racmar (Do you think there should be laws against marriages between (Negroes/Blacks/African-Americans) and whites?)
-## The average response comes from above 30 years old Democrats men with at least a BA
-vars <- c("year", "sex", "age", "partyid", "degree", "racmar") sub <- GSS[, vars]
-sub <- mutate(sub,
-nracmar = ifelse (racmar == 2, 1, 0),
-Men = ifelse(sex == 1, 1, 0),
-BA = ifelse(degree >= 3, 1, 0),
-BA30Men = ifelse (BA == 1 & age > 30, 1, 0 & Men == 1),
 
-StrongDem = ifelse(partyid == 0, 1, 0), SlightDem = ifelse(partyid == 1, 1, 0))
+# load packages
+library(QMSS)
+library(ggplot2)
+library(plyr)
+library(car)
+library(fUnitRoots)
+library(lmtest)
+
+## 1. Create a multivariate time series ##
+## For the Unites States, from 1975 to 1995, try to predict average positive response to racmar
+## (Do you think there should be laws against marriages between (Negroes/Blacks/African-Americans) and whites?)
+## The average response comes from above 30 years old Democrats men with at least a BA
+
+vars <- c("year", "sex", "age", "partyid", "degree", "racmar")
+sub <- GSS[, vars]
+
+sub <- mutate(sub,
+              nracmar = ifelse(racmar == 2, 1, 0),
+              Men = ifelse(sex == 1, 1, 0),
+              BA = ifelse(degree >= 3, 1, 0),
+              BA30Men = ifelse(BA == 1 & age > 30, 1, 0 & Men == 1),
+              StrongDem = ifelse(partyid == 0, 1, 0),
+              SlightDem = ifelse(partyid == 1, 1, 0))
+
 # get means by year
-#by.year <- aggregate(subset(sub, sel = -year), list(year = sub$year), mean, na.rm = T)
+# by.year <- aggregate(subset(sub, sel = -year), list(year = sub$year), mean, na.rm = T)
+
 # interpolate for some missing years
 # add the extra years
-by.year[30:40, "year"] <- c(1979, 1981, 1992, 1995, seq(1997, 2009, 2)) by.year <- arrange(by.year, year)
-# make a time series object by.year.ts and interpolate using na.approx by.year.ts <- ts(by.year)
+by.year[30:40, "year"] <- c(1979, 1981, 1992, 1995, seq(1997, 2009, 2))
+by.year <- arrange(by.year, year)
+
+# make a time series object by.year.ts and interpolate using na.approx
+by.year.ts <- ts(by.year)
 by.year.ts <- na.approx(by.year.ts)
-# calculate pct gender, percent fulltime, percent under 50 with BA by.year.ts <- as.data.frame(by.year.ts)
+
+# calculate pct gender, percent fulltime, percent under 50 with BA
+by.year.ts <- as.data.frame(by.year.ts)
 by.year.ts <- mutate(by.year.ts,
-Dem = StrongDem + SlightDem, Dem_pct = Dem*100, BA30Men_pct = BA30Men*100)
-# only keep up to 1995 and convert back to time series object # by.year.ts <- ts(subset(by.year.ts, year <= 1995))
+                     Dem = StrongDem + SlightDem,
+                     Dem_pct = Dem*100,
+                     BA30Men_pct = BA30Men*100)
+
+# only keep up to 1995 and convert back to time series object
+# by.year.ts <- ts(subset(by.year.ts, year <= 1995))
 
 by.year.ts
+
 # correlations
-cor.vars <- c("nracmar","BA30Men_pct", "Dem_pct", "year", "age") cor.dat <- by.year.ts[, cor.vars]
-install.packages("corrplot") library(corrplot) corrplot(cor(cor.dat))
+cor.vars <- c("nracmar", "BA30Men_pct", "Dem_pct", "year", "age")
+cor.dat <- by.year.ts[, cor.vars]
+install.packages("corrplot")
+library(corrplot)
+corrplot(cor(cor.dat))
+
 ## 2. Graph the relationships between X and Y.
-# First install the reshape2 package if not already installed # install.packages("reshape2")
+# First install the reshape2 package if not already installed
+# install.packages("reshape2")
 library(reshape2)
+
 meltMyTS <- function(mv.ts.object, time.var, keep.vars){
-# mv.ts.object = a multivariate ts object
-# keep.vars = character vector with names of variables to keep
+  # mv.ts.object = a multivariate ts object
+  # keep.vars = character vector with names of variables to keep
+  
+  # time.var = character string naming the time variable
+  require(reshape2)
+  if(missing(keep.vars)) {
+    melt.dat <- data.frame(mv.ts.object)
+  } else {
+    if (!(time.var %in% keep.vars)){
+      keep.vars <- c(keep.vars, time.var)
+    }
+    melt.dat <- data.frame(mv.ts.object)[, keep.vars]
+  }
+  melt.dat <- melt(melt.dat, id.vars = time.var)
+  colnames(melt.dat)[which(colnames(melt.dat) == time.var)] <- "time"
+  return(melt.dat)
+}
 
-# time.var = character string naming the time variable require(reshape2)
-if(missing(keep.vars)) {
-melt.dat <- data.frame(mv.ts.object)
-} else {
-if (!(time.var %in% keep.vars)){ keep.vars <- c(keep.vars, time.var)
-}
-melt.dat <- data.frame(mv.ts.object)[, keep.vars] }
-melt.dat <- melt(melt.dat, id.vars = time.var) colnames(melt.dat)[which(colnames(melt.dat) == time.var)] <- "time" return(melt.dat)
-}
-# Make a character vector naming the variables we might want to plot keep.vars <- c("nracmar", "BA30Men_pct", "Dem_pct", "year", "age")
-# Use meltMyTS to transform the data to a 3-column dataset containing a column # for time, a column for variable names,
+# Make a character vector naming the variables we might want to plot
+keep.vars <- c("nracmar", "BA30Men_pct", "Dem_pct", "year", "age")
+
+# Use meltMyTS to transform the data to a 3-column dataset containing a column
+# for time, a column for variable names,
 # and a column of values corresponding to the variable names
+plot.dat <- meltMyTS(mv.ts.object = by.year.ts, time.var = "year", keep.vars = keep.vars)
+plot.dat
 
-plot.dat <- meltMyTS(mv.ts.object = by.year.ts, time.var = "year", keep.vars = keep.vars) plot.dat
 # Use ggMyTS to plot any of the variables or multiple variables together
 ggMyTS <- function(df, varlist, line = TRUE, point = TRUE, pointsize = 3, linewidth = 1.25, ...){
-require(ggplot2)
-# varlist = character vector with names of variables to use if(missing(varlist)){
-gg <- ggplot(df, aes(time, value, colour = variable)) }
-else{
-include <- with(df, variable %in% varlist)
-gg <- ggplot(df[include,], aes(time, value, colour = variable))
-}
-if(line == FALSE & point == FALSE) {
-stop("At least one of 'line' or 'point' must be TRUE") }
-else{
-if(line == TRUE) gg <- gg + geom_line(size = linewidth, aes(color = variable), ...) if(point == TRUE) gg <- gg + geom_point(size = pointsize, aes(color = variable), ...)
-}
-
-gg + xlab("") + theme(legend.position = "bottom") + scale_x_continuous(breaks = min(df$time):max(df$time))
+  require(ggplot2)
+  
+  # varlist = character vector with names of variables to use
+  if(missing(varlist)){
+    gg <- ggplot(df, aes(time, value, colour = variable))
+  } else {
+    include <- with(df, variable %in% varlist)
+    gg <- ggplot(df[include,], aes(time, value, colour = variable))
+  }
+  if(line == FALSE & point == FALSE) {
+    stop("At least one of 'line' or 'point' must be TRUE")
+  } else {
+    if(line == TRUE) gg <- gg + geom_line(size = linewidth, aes(color = variable), ...)
+    if(point == TRUE) gg <- gg + geom_point(size = pointsize, aes(color = variable), ...)
+  }
+  gg + xlab("") + theme(legend.position = "bottom") + scale_x_continuous(breaks = min(df$time):max(df$time))
 }
 (g_Dem <- ggMyTS(df = plot.dat, varlist = c("Dem_pct")))
+
 ## 3. Run a simple time series regression, with one X and no trend. Interpret it.
-## Is a favorable opinion to an anti racial intermarriage law negatively corelatted with a higher level of education ?
-# simplest regression
-lm.racmar <- lm(nracmar ~ BA30Men_pct, data = by.year.ts) summary(lm.racmar)
-# test for heteroskedasticity bptest(lm.racmar)
-# look for autocorrelation in errors
-e <- lm.racmar$resid
-acf(e)
-acf(e, xlim = c(1,8), col = "red", lwd = 2) # can also customize acf output plot(e) # plot residuals over time
-dwtest(lm.racmar) # Durbin-Watson test
+linear.model <- lm(nracmar ~ Dem_pct, data = by.year.ts)
+summary(linear.model)
 
-bgtest(lm.racmar) # Breusch-Godfrey test
-durbinWatsonTest(lm.racmar, max.lag=3) # Durbin-Watson with more lags
 ## 4. Run a time series regression with one X and trend. Interpret it. Perform autocorrelation diagnostics. Explain what you found.
-# include year trend
-lm.racmar2 <- update(lm.racmar, ~ . + year) summary(lm.racmar2)
-# look for autocorrelation
-e2 <- lm.racmar2$resid
-acf(e2, xlim = c(1,8), col = "red", lwd = 2) pacf(e2, xlim = c(1,8), col = "red", lwd = 2) plot(e2)
-dwtest(lm.racmar2)
-bgtest(lm.racmar2) durbinWatsonTest(lm.racmar2, max.lag=3)
+linear.model.trend <- lm(nracmar ~ Dem_pct + year, data = by.year.ts)
+summary(linear.model.trend)
+
+# Check for autocorrelation
+dwtest(linear.model.trend)
+
 ## 5. Consider running a time series regression with many Xs and trend. Interpret that. Check VIF.
-# add some more predictors
-lm.racmar3 <- update(lm.racmar2, ~ . + Dem_pct) summary(lm.racmar3)
+linear.model.multiX <- lm(nracmar ~ Dem_pct + BA30Men_pct + year, data = by.year.ts)
+summary(linear.model.multiX)
 
-vif(lm.racmar3) # variance inflation factor durbinWatsonTest(lm.racmar3, max.lag=2)
-## Can I get rid of that spike at lag 2? ## by.year.ts$is.even <- by.year.ts$year %% 2 == 0 lm.racmar5 <- update(lm.racmar2, ~ . + is.even) summary(lm.racmar5)
-vif(lm.racmar3) # variance inflation factor durbinWatsonTest(lm.racmar3, max.lag=2)
+# Check VIF
+vif(linear.model.multiX)
+
 ## 6. Run a first differenced time series regression. Interpret that.
-firstD <- function(var, group, df){
-bad <- (missing(group) & !missing(df))
-if (bad) stop("if df is specified then group must also be specified")
-fD <- function(j){ c(NA, diff(j)) }
-var.is.alone <- missing(group) & missing(df)
-if (var.is.alone) { return(fD(var))
+diff.by.year.ts <- diff(by.year.ts)
+diff.linear.model <- lm(nracmar ~ Dem_pct + BA30Men_pct, data = diff.by.year.ts)
+summary(diff.linear.model)
 
-}
-if (missing(df)){
-V <- var
-G <- group }
-else{
-V <- df[, deparse(substitute(var))]
-G <- df[, deparse(substitute(group))]
-}
-G <- list(G)
-D.var <- by(V, G, fD) unlist(D.var)
-}
-## Use the first differences
-by.yearFD <- summarise(data.frame(by.year.ts),
-nracmar = firstD(nracmar), # using firstD functon from QMSS package BA30Men_pct = firstD(BA30Men_pct),
-Dem_pct = firstD(Dem_pct),
-year = year)
-lm.racmar4 <- update(lm.racmar3, data = by.yearFD) summary(lm.racmar4)
-e4 <- lm.racmar4$resid
-
-acf(e4, xlim = c(1,6), col = "red", lwd = 2) pacf(e4, xlim = c(1,6), col = "red", lwd = 2)
-install.packages("forecast") library(forecast) auto.arima(e4, trace=TRUE)
 ## 7. Check your variables for unit roots. Do some tests. Interpret them.
-adfTest(by.year.ts[,"nracmar"], lags = 0, type="ct") adfTest(by.year.ts[,"nracmar"], lags = 4, type="ct")
-# Phillips-Perron test PP.test(by.year.ts[,"nracmar"],lshort=TRUE)
-# BTW, Solution 1: use Newey & West autocorrelation consistent covariance matrix # estimator
-library(sandwich)
-coeftest(lm.racmar3, vcov = NeweyWest(lm.racmar2, lag = 2))
-## 8. Perform an Automatic ARIMA on the residuals from one of your earlier models. Tell me what it says.
+adfTest(by.year.ts$nracmar, lags = 1)
+adfTest(by.year.ts$Dem_pct, lags = 1)
+adfTest(by.year.ts$BA30Men_pct, lags = 1)
 
-library(forecast) auto.arima(e2, trace=TRUE)
-## 9. Run an ARIMA that follows from Step 7. Interpret that, too.
-xvars.fat <- by.year.ts[,c("BA30Men_pct", "year")]
-# ARIMA(1,0,0) = OLS
-arima.001 <- arima(by.year.ts[,"nracmar"], order = c(1,0,0), xreg = xvars.fat) summary(arima.001)
-Box.test(resid(arima.001), lag = 20, type = c("Ljung-Box"), fitdf = 0)
+## 8. Perform an Automatic ARIMA on the residuals from one of your earlier models. Tell me what it says.
+library(forecast)
+auto.arima(residuals(linear.model.trend))
+
+## 9. Run an ARIMA that follows from Step 8. Interpret that, too.
+arima.model <- arima(by.year.ts$nracmar, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 1))
+summary(arima.model)
