@@ -23,6 +23,10 @@
 
 ## 🕸️ Social network analysis
 
+[Lab 1](Social%20Network%20Analysis/Lab%201)
+
+[Lab 2](Social%20Network%20Analysis/Lab%202)
+
 ## 💡 Machine Learning 
 
 ## 🤖 Natural Language Processing 
