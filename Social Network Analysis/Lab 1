@@ -1,0 +1,59 @@
+setwd("/Users/jean/Desktop")
+
+gss <- read.csv("GSS-nets.csv") ## choose the GSS Networks csv.file from Courseworks ##
+
+library(plyr)
+
+gss$rsatjob <- 5 - gss$satjob
+
+table(gss$satjob)
+
+colnames(educs)
+
+#gss$degree <- rep(c("degree1", "degree2", "degree3", "degree4"), length.out = nrow(gss))
+#gss$avedegree <- rowMeans(gss[, c("degree1", "degree2", "degree3", "degree4")], na.rm = TRUE)
+#summary(gss$avedegree)
+
+educs = c("educ1", "educ2", "educ3", "educ4", "educ5")
+
+gss$aveeduc=rowMeans(gss[, educs ], na.rm=TRUE)
+
+summary(gss$aveeduc)
+
+#i tried many variables such as hunt and degree but they all seems not to get recognized. I choose to stick with educ instead.
+
+reg1 <- lm(rsatjob ~ aveeduc, data=gss)
+
+plot(gss$aveeduc, gss$rsatjob)
+
+abline(reg1)
+
+summary(lm(rsatjob~ aveeduc, data=gss))
+
+summary(lm(rsatjob ~ aveeduc + attend, data=gss))
+
+summary(lm(rsatjob ~ aveeduc + educ + attend, data=gss))
+
+summary(lm(rsatjob ~ aveeduc + aveeduc + attend + educ + race + childs + sex + fund, data=gss))
+
+summary(lm(rsatjob ~ aveeduc + aveeduc*educ + attend + age + + as.factor(fund) + as.factor(childs) + as.factor(reliten) + as.factor(marital) + as.factor(race) + natenvir + shotgun + sex, data=gss))
+
+educs = c("educ1", "educ2", "educ3", "educ4", "educ5")
+
+sub <- gss[, educs]
+
+sub2=transform(sub, SD=apply(sub,1, sd, na.rm = TRUE))
+
+colnames(sub2)[6] <- "sdeduc"
+
+gss <- data.frame(gss, sub2[,"sdeduc"])
+
+colnames(gss)
+
+colnames(gss)[4222] <- "sdeduc"
+
+library(stargazer)
+
+lm1 = lm(rsatjob ~ aveeduc + aveeduc + attend + sdeduc + age + + as.factor(fund) + as.factor(childs) + as.factor(reliten) + as.factor(marital) + as.factor(race) + natenvir + shotgun + sex, data=gss)
+
+stargazer(lm1, type = "text")
