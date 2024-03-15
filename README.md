@@ -35,6 +35,8 @@
 
 ## 🤖 Natural Language Processing 
 
+## 📖 Master Thesis
+
 
 
 [3.2]: https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/linkedin-3-16.png (LinkedIn icon without padding)
