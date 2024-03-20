@@ -1,5 +1,5 @@
 # 🌴 Hello stranger !🌴
- I appreciate you stumbled upon my page and chose to take a look. My name is Jean, and I am current graduate student at Columbia University in the Quantitative Methods in Social Sciences (QMSS) departement. I am originally from France, Paris but I am also half-Argentinean. This git page will provide you with the coding I did part of my program. You can find me on [![LinkedIn][3.2]][2]. 
+ I appreciate you stumbled upon my page and chose to take a look. I graduated from Columbia University with a M.A in  Quantitative Methods in Social Sciences (QMSS) departement, and currently in New-York. This git page will provide you with the coding I did as part of my program along with my final thesis. You can find me on [![LinkedIn][3.2]][2]. 
 
 
 
