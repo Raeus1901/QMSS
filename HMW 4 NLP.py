@@ -156,19 +156,6 @@ def write_pickle(obj_in, path_in, file_name):
     
 
 
-subreddit_channel = 'politics'
-
-reddit = praw.Reddit(
-     client_id="s04vIL1j8gzutqyYNe8BDA",
-     client_secret="BkPW8CCYhZ9hJfG8-91WLIVU8bfBnw",
-     user_agent="testscript by u/fakebot3",
-     username="Lastman1337",
-     password="Jimihendrix1!",
-     check_for_async=False
- )
-
-print(reddit.read_only)
-
 def conv_time(var):
     tmp_df = pd.DataFrame()
     new_row = pd.DataFrame({'created_at': var}, index=[0])
