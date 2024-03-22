@@ -1,1 +1,153 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[19]:
+
+
+"""
+1. Modify the code below to count 'up' in increments of +1 
+"""
+for word in range(0, 101):
+    print (word)
+#I changed 100 to 101 to get values reaching 100, Otherwise it stays at 99.
+
+
+# In[13]:
+
+
+"""
+2. Change the code below to count down in increments of -2.0
+"""
+start = 100.0
+end = 0.0
+step = -2.0
+
+while start > end:
+    print(start)
+    start += step
+
+
+# In[30]:
+
+
+"""
+3. Create a program that counts up from 0 to 100.  The program is to print "Hello" 
+when the count is less than 50 and print "World" when the count is greater or equal to 50
+"""
+for word in range(0, 101):
+    if word < 50:
+        print("Hello")
+    else: # elif word >= 50     
+        print ("World")
+
+
+# In[11]:
+
+
+"""
+4. Create a function called char_cnt that takes in a string and outputs a dictionary where
+each key represents a unique character and the value is the number of times that character
+shows up in the string
+"""
+def char_cnt(str_in):
+    tmp = dict()
+    for c in str_in:
+        if c in tmp:
+            tmp[c] += 1
+        else:
+            tmp[c] = 1
+    return tmp
+        
+print(char_cnt("The weather is gray today but it remains very warm hopefully"))
+
+
+# In[10]:
+
+
+"""
+5.  create a function called rev_list that takes a list as an input and reverses the elements 
+of a that list, you must use a loop statement or sorts, and you cannot use .reverse() or [::-1] 
+"""
+my_list = ["Columbia", "Harvard", "Yale"]
+
+def rev_list(my_list): 
+    result = []
+    for item in my_list: 
+        result = [item] + result 
+    return result 
+
+print(rev_list(my_list))
+
+newlist = [x for x in my_list if "a" in x]
+print(newlist)
+
+
+# In[8]:
+
+
+"""
+6 Using list comprehension (HINT: []) populate an array whose individual word 
+character lengths are >= 4 (10 points)
+"""
+the_sentence = "the student went above and beyond the call of duty on the homework"
+
+the_sentence.split()
+
+words = [word for word in the_sentence.split() if len(word) >= 4]
+
+print(words)
+
+
+# In[7]:
+
+
+"""
+7. Fix the errors in the code below and replace the word dog with turtle
+"""
+import re
+the_sentence = 'the orange cat jumped over the dog, but the orange cat landed on another orange cat'
+
+my_ar = the_sentence.replace('dog', 'turtle')
+
+print(my_ar)
+
+
+# In[9]:
+
+
+"""
+8. Create a function called cln_txt that takes a list as an input, the
+list will contain tokens, your job is to replace any special characters with
+a no space, except '!', with ''
+"""
+
+import re 
+
+def cln_txt(tokens):
+    cleaned_tokens = [re.sub('[^a-zA-Z0-9!]+', '', token) for token in tokens]
+    return cleaned_tokens
+
+the_ar = ['woah!!!', 'the', '@student', 'really^', '#impressed', 'me,', 'and&', 'so', 'did', '??you!!!']
+wan_ar = cln_txt(the_ar)
+
+print(wan_ar)
+
+
+# In[5]:
+
+
+"""
+9. Create a program that loops 10 times and for each loop generate a random integer between 1 and 10, 
+and print 'even' if the number is even and 'odd' if the number is odd (HINT: import random)
+if the number is odd
+"""
+import random
+from random import randint
+for _ in range(10):
+    number = random.randint(1, 10)  # Generate a random number between 1 and 10
+    if number % 2 == 0:
+        print('even')
+    else:
+        print('odd')
+
 
