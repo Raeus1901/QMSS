@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Dec 21 19:52:15 2020
+@author: pathou
+"""
+
+import praw
+import pandas as pd
+import pytz
+from datetime import datetime
+from sklearn.naive_bayes import GaussianNB
+import pickle
+
+
+def clean_txt(str_in):
+    import re
+    tmp_clean_t = re.sub("[^A-Za-z']+", " ", str_in
+                         ).lower().strip()
+    return tmp_clean_t
+
+def rem_sw(str_in):
+    import nltk
+    sw = nltk.corpus.stopwords.words('english')    
+    sent = [word for word in str_in.lower(
+        ).split() if word not in sw]
+    sent = ' '.join(sent)
+    return sent
+
+def stem_fun(str_in):
+    from nltk.stem import PorterStemmer
+    ps = PorterStemmer()    
+    sent = [ps.stem(word) for word in str_in.lower(
+        ).split()]
+    sent = ' '.join(sent)
+    return sent
+
+def vec_fun(df_in, path_in, name_in, m_in, n_in, label_in):
+    from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+    import pandas as pd
+    if name_in == "tfidf":
+        cv = TfidfVectorizer(ngram_range=(m_in, n_in))
+    elif name_in == "vec":
+        cv = CountVectorizer(ngram_range=(m_in, n_in))
+    else:
+        print ("Hey pick a valid transformer vec or tfidf")
+    xform_data_t = pd.DataFrame(cv.fit_transform(df_in).toarray()) #be careful dense matrix takes up space
+    xform_data_t.columns = cv.get_feature_names_out()
+    xform_data_t.index = label_in
+    write_pickle(cv, path_in, name_in)
+    return xform_data_t
+
+def pca_fun(df_in, exp_var, path_in, name_in):
+    from sklearn.decomposition import PCA
+    pca_fun = PCA(n_components=exp_var)
+    pca_data = pca_fun.fit_transform(df_in)
+    exp_var = sum(pca_fun.explained_variance_ratio_)
+    print ("exp var", exp_var)
+    write_pickle(pca_fun, path_in, name_in)
+    return pca_data
+
+def domain_train(df_in, path_in, name_in):
+    #domain specific
+    import pandas as pd
+    import gensim
+    def get_score(var):
+        import numpy as np
+        tmp_arr = list()
+        for word in var:
+            try:
+                tmp_arr.append(list(model.wv.get_vector(word)))
+            except:
+                pass
+        tmp_arr
+        return np.mean(np.array(tmp_arr), axis=0)
+    model = gensim.models.Word2Vec(df_in.str.split())
+    model.save(path_in + 'body.embedding')
+    #call up the model
+    #load_model = gensim.models.Word2Vec.load('body.embedding')
+    model.wv.similarity('fish','river')
+    tmp_data = pd.DataFrame(df_in.str.split().apply(get_score))
+    return tmp_data, model
+
+def chi_fun(df_in, label_in, k_in, path_out, name_in):
+    from sklearn.feature_selection import chi2
+    from sklearn.feature_selection import SelectKBest
+    import pandas as pd
+    feat_sel = SelectKBest(score_func=chi2, k=k_in)
+    dim_data = pd.DataFrame(feat_sel.fit_transform(
+        df_in, label_in))
+    feat_index = feat_sel.get_support(indices=True)
+    feature_names = df_in.columns[feat_index]
+    dim_data.columns = feature_names
+    write_pickle(feat_sel, path_out, name_in)
+    return dim_data
+
+def model_fun(df_in, label_in, sel_in, t_in, o_in):
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.naive_bayes import GaussianNB
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import precision_recall_fscore_support
+    import pandas as pd
+
+    # Choose the model
+    if sel_in == "rf":
+        model = RandomForestClassifier(random_state=123)
+    elif sel_in == "nb":
+        model = GaussianNB()
+    
+    # Split the data
+    X_train, X_test, y_train, y_test = train_test_split(
+        df_in, label_in, test_size=t_in, random_state=42)
+     
+    write_pickle(model, o_in, sel_in)
+    y_pred = model.predict(X_test)
+    y_pred_proba = pd.DataFrame(model.predict_proba(X_test))
+    y_pred_proba.columns = model.classes_
+    try:
+        fi = pd.DataFrame(model.feature_importances_)
+        fi.index = model.feature_names_in_
+        fi.columns = ["score"]
+        num_fi = fi[fi.score != 0]
+        fi.to_csv(o_in + "fi.csv", index=True)
+    except:
+        print (sel_in, "does NOT support feature importance")
+    
+    metrics = pd.DataFrame(precision_recall_fscore_support(
+        y_test, y_pred, average='weighted'))
+    metrics.index = ["precision", "recall", "F1", None]
+    print (metrics)
+    return model
+
+def cos_fun(df_in_a, df_in_b, label_in):
+    from sklearn.metrics.pairwise import cosine_similarity
+    import pandas as pd
+    cos_sim = pd.DataFrame(cosine_similarity(df_in_a, df_in_b))
+    cos_sim.index = label_in
+    cos_sim.columns = label_in
+    return cos_sim
+
+def read_pickle(path_in, file_name):
+    tmp_o = pickle.load(
+        open(path_in + file_name + ".pk", 'rb'))
+    return tmp_o
+
+def load_pickle(file_path, file_name):
+    with open(f"{file_path}/{file_name}.pk", 'rb') as file:
+        return pickle.load(file)
+    
+def write_pickle(obj_in, path_in, file_name):
+    #https://docs.python.org/3/library/pickle.html
+    import pickle
+    # dump information to that file
+    pickle.dump(obj_in, open(
+        path_in + file_name + '.pk', 'wb'))
+    
+
+
+subreddit_channel = 'politics'
+
+reddit = praw.Reddit(
+     client_id="s04vIL1j8gzutqyYNe8BDA",
+     client_secret="BkPW8CCYhZ9hJfG8-91WLIVU8bfBnw",
+     user_agent="testscript by u/fakebot3",
+     username="Lastman1337",
+     password="Jimihendrix1!",
+     check_for_async=False
+ )
+
+print(reddit.read_only)
+
+def conv_time(var):
+    tmp_df = pd.DataFrame()
+    new_row = pd.DataFrame({'created_at': var}, index=[0])
+    tmp_df = tmp_df.append(
+        {'created_at': var},ignore_index=True)
+    tmp_df.created_at = pd.to_datetime(
+        tmp_df.created_at, unit='s').dt.tz_localize(
+            'utc').dt.tz_convert('US/Eastern') 
+    return datetime.fromtimestamp(var).astimezone(pytz.utc)
+
+def get_reddit_data(var_in):
+    import pandas as pd
+    tmp_dict = pd.DataFrame()
+    tmp_time = None
+    try:
+        tmp_dict = tmp_dict.append({"created_at": conv_time(
+                                        var_in.created_utc)},
+                                    ignore_index=True)
+        tmp_time = tmp_dict.created_at[0] 
+    except:
+        print ("ERROR")
+        pass
+    tmp_dict = {'msg_id': str(var_in.id), 'author': str(var_in.author), 'body': var_in.body, 'datetime': tmp_time}
+    return tmp_dict
+
+def preprocess_text(text):
+    text_clean = clean_txt(text)
+    text_sw = rem_sw(text_clean)
+    text_stem = stem_fun(text_sw)
+    return text_stem
+
+# Collect messages
+messages = []
+for comment in reddit.subreddit(subreddit_channel).stream.comments():
+    processed_text = preprocess_text(comment.body)
+    messages.append(processed_text)
+    if len(messages) >= 81:  # Set a limit for data collection
+        break
+    
+
+# Convert messages to Pandas Series for compatibility
+messages_series = pd.Series(messages)
+
+# Apply vec_fun for vectorization
+vectorized_data = vec_fun(messages_series, "/Users/jean/Downloads", "vec", 1, 3, messages_series.index)
+
+# Adjust PCA components to match the expected number of features
+pca_transformed_data = pca_fun(vectorized_data, 81, "/Users/jean/Downloads", "pca")
+
+classifier = load_pickle("/Users/jean/Downloads", "my_model")
+
+def classify_data(pca_transformed_data, classifier):
+    predictions = classifier.predict(pca_transformed_data)
+    likelihoods = classifier.predict_proba(pca_transformed_data)
+    return predictions, likelihoods
+
+# Classify each processed message
+predictions, likelihoods = classify_data(pca_transformed_data, classifier)
+
+# Displaying results for each message
+for i in range(len(messages)):
+    print(f"Message: {messages[i]}")
+    print(f"Class Label: {predictions[i]}, Likelihood Score: {max(likelihoods[i])}\n")
+
+
+    
+    
