@@ -1,0 +1,196 @@
+---
+title: "Bayesian Homework 1"
+author: "Jean Treves"
+format: pdf
+editor: visual
+execute: 
+  echo: true 
+---
+
+
+## 1.1
+
+There are 52 cards in the decks. We know that = 52×51 / 2 = 1326 possible hands. 2 corresponds to the marginal probability of having a pair of 2 cards while 52x51 sums the whole probability of picking the first card of the deck. Overall, this brings to 1326 possible different possible pairs to get in this game.  
+We want to find specifically a pair of two aces in the game. Let's repeat the same calculation but by choosing only aces. Because there is only 4 aces in the game, we want to find the probability of finding the first ace then the conditional probability of finding the second ace (Dependent on the probability of finding the first ace): 
+
+(4x3)/2 = 6
+
+Then divide by the total number of possible pairs to get the probability of getting a pair of ace. 
+
+6/1326 = 0.0045
+
+There is a 0.45% probability of having a pair of aces in your hand, which is very low. Notice this probability can be even lower, that is 0.0225% if you want to find a pair of aces with specific colours such as heart then spades or vice-versa. 
+
+
+## 1.2
+
+First, we need to differentiate an objective probability from a subjective one. On one hand, we define objectivity as the probability calculated through available information and data. As such, objectivity is the probability of getting a certain event to happen based on recorded observations and historical data collection. On the other hand, subjectivity is shaped by personal belief and the interpretation of the collected data. Subjectivity implies speculation rather than quantitative calculation (as opposed to objectivity). To sum up, objective probability is constant and representative meanwhile subjectivity can be elastic and non-representative of a probability of a certain event to happen. 
+
+The presentators indicate a 82% of Kenney winning the showdown whereas it is only of 18%. The presentators know the cards of each player, as Kenney has a pair of aces whereas Negreanu only has a pair of threes. Only 2 players remain, each with 2 cards in their hand, and with 5 remaining cards to be flipped in the middle. This brings a total of 43 remaining cards in the deck.
+Based upon calculation, 43/52 = 0.82 which brings a probability of 82% of Kenney currently winning the showdown, dependent on the next cards showcased by the river. This probability is objective given it was calculated through data collection. 
+
+From Negreanu's perspective, his chances of winning the showdown would subjectively be lower than 18%. Negreanu does not know Kenney has the best pair in the game; he does not even know if Kenney has a pair at all in his hand. Negreanu might have a pair of threes (which is rare), but low when compared to higher possible pairs in the game. Knowing that, Negreanu might expect Kenney to have a better hand given he was the first one to bet voluntarily. So Negreanu believe it is unlikely his opponent will bluff over time. Negreanu might just stick with his cards, calling on Kenney's bets and playing with luck until he finds an opportunity in which he becomes the dominant player so he could pressure Kenney in doing an all-in. However, Negreanu certainly knows it is only a good idea to bet with 1/6 of the possible 1326 pairs. So from Negreanu's perspective, his chances of winning should be 16.6% knowing that Kenney has probably a better hand with him.
+
+From Kenney's perspective, this probability could be higher given he has the best possible pair (among all 1326 possible pairs) in the game. Despite Kenney not knowing his opponent's hand, it is safe to assume that Kenney believes his opponent could not get a better hand to him. In this scenario, Kenney would believe his opponent to have either the remaining pair of aces (which is very unlikely) or to bluff over the course of the game. The latter hypothesis seems more likely. Hence, Kenney might think his chances of winning are higher than 82% based upon his beliefs he has the best pair and Negreanu will likely bluff. Based on the previous calculations, Kenney might thinks he has a 83.6% subjective probability of winning.
+
+The first three cards of the river turned out to be an ace, a 5 of clubs and 4 of spike. From Kenney's persepctive, that is very good for him given he has now a three of a kind with aces and he knows with certainty now that Negreanu does not have an ace in his hand. So he believes he is likely to win. However, the river is also good for Negreanu given he can now bet on his luck to get a straight, which could beat Kenney's hand. This is the reason why Negreanu decided to follow Kenney's call of 5000. It is a risky strategy but entirely logical as the final gains might be worth it and accessible. 
+
+So both players think their subjective probability of winning the game increases following the cards in the river. Objectively, the probability that Kenney wins increases from 82% to 85%. This is because a new ace appeared in the river thus increasing Kenney's win probability 
+
+
+## 1.3
+
+As precised previously, objective probability is calculated through the number of possible hands in the game based on information. The number 990 refers Negreanu's probability to have 4 threes in the game, based on the 45 remaining cards in the deck. If we do 45! for every possible pair Negreanu would get, then it brings to 990 remaining combinations in the game: 45! / 2! (45-2)! = 990. So this brought a possibility of 1/990 for Negreanu to have 4 threes in the game. Negreanu was very lucky in this game, and his risky strategy was worth it. On the other hand, Kenney has only 1 chance of winning the game by having a straight flush. This means only, and only if, a 2 of spikes would have appeared then Kenney could have win against his now-dominant opponent. 
+
+
+## 1.4
+
+Raising an all-in as soon as you have the nuts makes no sense. Suppose Kenney is able to predict his opponent's moves, based on his prior actions. Kenney knows that Negreanu tend to follow his bets, but only raises when a new card in the river supposedly increases his chance of winning. By that logic, Kenney expects Negreanu not to be bluffer but rather a logical risk-averse player,who chooses to raise as much as he can when the situation is favorable (but not too much) to pressure his opponent in betting more. He might thinks of Negreanu as an opponent who has a worse hand than him, but still able to withstand against most of his hands thanks to the river. Indeed, Kenney might think the river is more favourable to Negreanu than him, despite a third ace. The reason is that Negreanu decided to raise once a three appeared in the river. Kenney now knows that Negreanu is expecting a straight to happen, which is likely, and that would beat Kenney's three of a kind aces. It is obvious to Kenney that Negreanu has a straightif he does an all-in once all the cards in the river are settled. Knowing his strategy, Kenny will just fold despite losing massive gains in this showdown. 
+
+
+Knowing Kenney's strategy to fold as once he does an all-in, Negreanu might prefer to change his strategy from risk-averse to bluffer. Negreanu would choose to raise no more than 30000 (1/10th of the starting money to enter the championship) in pushing Kenney to call on his bet. By doing so, Kenney might be confused as this could mean Negreanu does not have a straight but a three of a kind of threes for instance. Knowing this, Kenney will follow the bet and raises more as he thinks that Negreanu remains a risk-averse player. Kenney chooses to bet more given he thinks that Negreanu believes he will beat Kenney hand's thanks to a three of a kind of threes. However, Kenney is unable to determine Negreanu's new bluffing behaviour as he did not bluff before. So Kenney remains stuck in his belief he is winning against a weaker Negreanu, who knowing this will exploit this false intuition to makes him bet more. 
+
+This seems like a chess-game so far. 
+
+
+## 1.5
+
+It was a good decision. Kenney knows that Negreanu could be the dominant player. It might sounds absurd for him his opponent decides to all-in knowing that Kenney has at least a three of a kind. So Kenney is not sure whatever Negreanu has a full house or better, of if he just buffing. Based on his previous moves, Kenney might be certain Negreanu is not a bluffer. However, Kenney could be tempted to believe that Negreanu wants to him to think his hands are better than his. At the same time, Kenney is confident he can wins given his full house is very good thanks to his three aces. So the only possibility Negreanu wins is if he has four of a kind, which seems unlikely but plausible given the last three cards of the river were threes. Knowing he need to bet on almost 1/3 of his starting 300000 to win this showdown, Kenney acknowledges this it is indeed a risky bet (hence the reason why he unusually thought for longer). However, Kenney full house remains very good so rationally speaking he could win a large amount of chips through this bet. Furthermore, Kenney already bet 2/3 of his chips in the tournament so going backtrack now makes no sense as he will end up in a losing position relative to the other players. Hence, Kenney's decision to follow the all-in was an overkill but it was a good decision, given it was the only valuable option in Kenney's situation. 
+
+With Bayes theory, we could argue there is two different scenarios for Kenney: One in which he is the dominant player and Negreanu is a bluffer (easy scenario) and another one where Negreanu is lucky and becomes the dominant player (hard way). If drawn in a bell curve, the easy scenario would be spaced out as Kenney's probability to win should fall in an interval of at least [10;90] with 83 being the most likely number. The hard scenario however would have brought his chance of winning at around 17. 
+
+
+
+## 2.1
+
+N is the known number of grenades in the sample
+
+X it the unknown number of defective grenades out of N
+
+n is the number of randomly-selected grenades to test out the N in the sample
+
+k is the defective number of grenades among the n tested
+
+a and b cannot be negative, belonging to {0; +infinite}. If a and b = 1 then probability is 1/N+1. Higher value of a shifts toward higher value of X, whereas b does the opposite. EX = N a/b+a.
+
+We want to sample n=31 grenades. We know that a and b cannot be equal to 1 neither otherwise we get a wrong probability, keeping the number of newly found grenades to be constant over time (e.g: 0.16666).
+
+I will assume there is 6 unknown defectives grenades out of N so X=6 but k remains unknown at the moment. To do so, Let's do the following calcultation:
+
+EX = 100 x 6 / 94 + 6 =\> 600/100 = 6
+
+```{N <- 100}
+n <- 31
+a <- 6
+b <- 94 
+```
+
+## 2.2
+
+``` {r}
+library(extraDistr)
+library(dplyr)
+R<-10000000
+  N <- 100
+  n <- 31
+  alpha <- 6
+  beta <- 94
+  X <- 6
+    x <- rbbinom(R, size = N, alpha=6, beta=94) 
+    k <- rhyper(R, N-n, n, X)
+
+#Number of working grenade: 94
+#Number of defective grenade: 6
+#Number of grenades drawn from the sample: 31
+    
+draws <- tibble(x,k)
+summary(draws)
+
+
+
+
+
+```
+
+##2.3 Queries
+
+
+```{r}
+  
+  summarize(draws, prob = mean(k == 2))
+    
+    
+
+```
+The probability is of 18% that there is two defective grenades. 
+
+```{r}
+tibble(draws, N) %>% 
+  summarize(prob = mean(x-k <= 3))
+    
+
+```
+
+The probability at most 3 grenades do not explose, based on the remaining 69 grenades, brings to 63%.
+
+
+##2.4 Queries
+
+
+```{r}
+
+set.seed(761)
+
+N <- 100
+names(N) <- as.character(N)
+R <- 1
+n <- 37
+X <- 5 # defective grenades in N 
+k <- 2 #defective grenades in n 
+
+
+  c <- rhyper( R, N-n, n, x)
+  
+
+
+
+
+```
+
+
+```{r}
+
+x <- 5
+sum(tibble(dhyper(0:2,100,37,5)))
+
+```
+	
+	
+
+##2.5 Congress**
+
+```{r}
+library(extraDistr)
+library(dplyr)
+
+
+Pr <- function(x=3535579, N=7004034) {
+  stopifnot(length(x) == 1 || length(n) == 1, x >= 0)
+  ifelse(x > n, 0, log(1 + 1 / (n + 1 - x), base = n + 2))
+}
+
+set.seed(1)
+
+R <- 1
+n <- 3535579
+N <- 7004034 - n
+k <- 1816096
+alpha <- 0.05 
+beta <- 0.95 
+v <- seq (1685922, 1, alpha = alpha - k, beta = beta + n - k) 
+
+p <- pbbinom(v, size=1, alpha - k, beta + n - k )
+
+```
+
+
