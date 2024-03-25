@@ -1,0 +1,222 @@
+---
+title: "Bayesian HMW 2"
+author: "Jean Treves"
+format: pdf
+editor: visual
+execute: 
+  echo: true 
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## 1 Economic growth
+
+#### 1.1
+
+Let's start by downloading the GDI and GDP of 1970-2022 3rd quarter along with their level of unemployment (referred as UR).
+
+```{r}
+
+library(dplyr)
+FRED <- "https://fred.stlouisfed.org/graph/fredgraph.csv?id="
+SERIES <- c(GDI = "A261RL1Q225SBEA",
+GDP = "A191RL1Q225SBEA",
+UR = "LRUN64TTUSQ156S")
+dataset <- readr::read_csv(paste0(FRED, paste(SERIES, collapse = ",")),
+progress = FALSE, show_col_types = FALSE,
+na = ".") %>%
+rename(quarter_startdate = DATE,
+GDI = A261RL1Q225SBEA,
+GDP = A191RL1Q225SBEA,
+UR = LRUN64TTUSQ156S) %>%
+na.omit %>%
+arrange(desc(quarter_startdate))
+set.seed(123)
+```
+
+We want to consider a measurement model in which both GDP and GDI are independent variables at time t, normally distributed over time with expectation parameter 𝜇𝑡 and time-invariant *𝜏* precision factor. 𝜇𝑡 refers to the concept of real economic growth, different from nominal measures such as GDP. Economists like to apply the 𝜇𝑡 factor on GDP to get an idea of the real growth, that is real GDP growth (expenditure approach). GDI is also an estimate of 𝜇𝑡 (income approach).
+
+Now that we know GDP and GDI are estimates to the 𝜇𝑡, we want to estilmate the *a* shapeand the *b* rate parameters of *𝜏.* Let's assume *a \>* 0 and and *b \>* 0, where an estimation of *𝜏* according to these parameters equal to 4/9.
+
+We know that $\tau = \frac{1}{\sigma^2}$ is the precision of $X$
+
+According to theory, $\mu = \frac{a}{b}$ and $\sigma^2 = \frac{a}{b^2}$ so $a = \frac{\mu^2}{\sigma^2}$ and $b = \frac{\mu}{\sigma^2}$. However, we don't know the values of 𝜇 and neither of the variance.
+
+Let's assume the slope is constant over time such that is equal to 1 such that *a = 1* is the slope of reference. We want to predicts changes in *𝜏* according to average changes in differences between *b0* and the futures *b* over time. We want to make sure the pmf sums to 1
+
+We can re-use our equation such that a/b = 4/9 \<=\> b = (4/9)a. So we can assign a value of 4/9 to the *b* rate and *a* to 1 and vice-versa. I will prefer to reverse the above ratio, instead opting for a=9 and b=4. This will makes the model in question 3) more understandable.
+
+```{r}
+a <- 9
+b <- 4
+```
+
+#### 1.2
+
+The Okun's law implies a negative relationship between unemployment rate and GDP/GDI growth. According to the theory, a 1% increase in unemployment will results to a 2% GDP/GDI decrease compared to its potential level. This creates a GDP gap between its real level and its nominal level. Suppose Okun's law follow the following equation:
+
+*𝜇𝑡 (𝑥𝑡) ≡ 3.2 + (−1.8) 𝑥𝑡*
+
+Consider *xt* as the change in unemployment rate between quarter *t* and quarter *t-1.* We already have our data observing all the changes in the GDP/GDI/UR measures until the third quarter of 2022. Now we want to predict how changes in Q3 will impact the outcomes of Q4, based
+
+As defined previously, *𝜇𝑡* is a measure of the real GDP/GDI. It can be defined as the gap between the changes in GDP and its nominal level such that *𝜇𝑡 =* ![{\\displaystyle {\\frac {{\\overline {Y}}-Y}{\\overline {Y}}}=c(u-{\\overline {u}})}](https://wikimedia.org/api/rest_v1/media/math/render/svg/bc1425d194de75e203de653970cc289476374880){alt="{\\displaystyle {\\frac {{\\overline {Y}}-Y}{\\overline {Y}}}=c(u-{\\overline {u}})}" width="118"} standing for changes in GDP divided by the potential GDP level. The 3.2 value corresponds to the absolute GDP value of Q3 2022 whereas -1.8 refers to the Okun coefficient, that is the factor relating changes in UR to changes in GDP. We know the UR was 3.62 at the start of Q4 (that is october 2022) and is supposed to be 3.43 at the end of this period (so in december 2022). So *xt* in this model is equal to 3.43 - 3.62 = -0.19.
+
+We can re-use the equation such that:
+
+*𝜇𝑡 (𝑥𝑡) ≡ 3.2 + (−1.8) -0.19 = 3.518*
+
+We can now assigns a value of 3.518 to the *m* parameter to the prior distribution for *𝜇𝑡* conditional to *𝜏* predicting a GDP gap of 3.518 in Q4.
+
+Now we want to calculate a value for the precision factor 𝑣𝜏, where 𝑣 \> 0 illustrates the accuracy of the *m* predictor*.* We know the coefficient of determination is equal to R\^2 = 0.463. It is worth reminding too that the precision of a variable is equal to the inverse of its variation such that Prec(X)=Var(X)−1=1E\[(X−E(X))2\]
+
+So 𝑣𝜏 should be equal to 1-𝜏 or in other words: hence it is v = 1/R\^2\*m\^2
+
+We can assign these values in R such that:
+
+```{r}
+m <- 3.518  # expectation provided by Okun's law
+R2 <- 0.463  # coefficient of determination 
+v <- 1 / (R2 * m^2)  # precision of the prior distribution
+```
+
+#### 1.3
+
+```{r}
+library(ggplot2)
+a <- 9
+b <- 4
+m <- 3.518  # expectation provided by Okun's law
+R2 <- 0.463  # coefficient of determination 
+v <- 1/m*R2^2
+R = 10^7
+draws <- tibble (
+  tau = rgamma(R, shape = 9, rate = 4), 
+  mu = rnorm(R, mean = m, sd = 1/sqrt(v*tau)),
+  GDP = rnorm(R, mean = mu, sd = 1/sqrt(tau)),
+  GDI = rnorm(R, mean = mu, sd = 1/sqrt(tau)),
+)
+g_draws <- ggplot(draws, aes(x = GDP, weight = tau)) +
+  geom_density(color="darkblue", fill="blue", alpha = 9)+
+  geom_density(aes(x = GDI), color="darkred", alpha = 9)+
+  labs(x = "GDP / GDI",
+       y = "density")
+
+plot(g_draws)
+
+```
+
+Because the GDI and GDP have the same formula, then they will share the same distribution for Q4. I kept the GDI in a blue-fill form to distinct it from the darkred curve that is GDP. This graph indicates that a *real* GDP/GDI growth of about 4% is most likely to occur in Q4. The 𝜇𝑡 estimator gives an expected growth value of about 3.518, higher than in 3Q where it was 3.2 for GDP and 2.8 for GDI. According to Okun's law, this result makes changes given that a -0.19 reduction in UR should gives a 0.38 increase in UR (which is slightly lower in this scenario given the Okun coefficient is 1.8 not 2). However, this makes less sense for GDI given its value should be lower than GDP proportionally to these results. Because GDP and GDI share the same function, and do not use any data, then they will have the same results with no consideration to the prior distribution.
+
+#### 1.4
+
+```{r}
+GDP_t <- 2.7
+GDI_t <- 0.2
+posterior_draws <- filter(draws,
+round(GDP, digits = 1) == GDP_t,
+round(GDI, digits = 1) == GDI_t)
+ggplot(posterior_draws, aes(x = mu, y = tau)) +
+  geom_hex() +
+  labs(x = expression(mu[t]), y = expression(tau))
+```
+
+Most of the hexagonal points are located in the center of the graph, specifically for a 𝜇𝑡 interval of \[0.75;2\] and 𝜏 interval of \[1;2\]. The average for 𝜏 should be around 1.5, given the distribution of the points. However, the densest region of the plot is located for 𝜏 = 1.75 in regards to the densest points in the graph: There are 6 in total, all having a density score higher than 2. According to this graph,it is most likely to expect a real GDP/GDI growth changes defined as either 1.3, \~1.5, 1.75, 1.9, 2.1 and 2.25 compared to Q3. 𝜏 estimated an in accurate way the expected changes in GDP for the following period. However, the 𝜇 distribution does not seem to be accurate with the 2.7% changes estimated by the bea.
+
+## 2 Climate change
+
+#### 2.1
+
+```{r}
+library(dplyr)
+
+R <- 10^7
+F <- 3.6
+Lambda <- -1.6
+F_deviation <- 0.2 * F
+Lambda_deviation <- 0.5 *abs(Lambda) #We want to add an absolute to keep the deviation positive as lambad is negative. 
+
+draws <- tibble(numerator = rnorm(R, mean = F, sd = F_deviation),
+                denominator = rnorm(R, mean = Lambda, sd = Lambda_deviation), 
+                ECS = -(numerator/denominator))
+
+summary(draws)
+```
+
+#### 2.2
+
+```{r}
+numerator <- rnorm(R, mean = F, sd = F_deviation)
+denominator <- rnorm(R, mean = Lambda, sd = Lambda_deviation)
+ECS <- -(numerator/denominator)
+draws <- tibble(numerator, denominator, ECS) %>%
+  filter(ECS >= 0 & ECS <= 10)
+
+summary(draws)
+```
+
+```{r}
+
+library(dplyr)
+
+proportion <- draws %>% 
+  filter(ECS >= 0) %>% 
+  nrow() / nrow(draws)
+
+proportion
+
+```
+
+Note: the original score should be 0.97721, not 1.
+
+```{r}
+library(ggplot2)
+g_ECS <- ggplot(draws) + 
+  geom_density(aes(x = ECS), color = "darkgreen", fill = "orange") +
+  xlim(c(0, 10)) +
+  labs(x = "Equilibrium Climate Sensitivity (ECS)",
+       y = "Density") 
+g_ECS
+
+```
+
+#### 2.3
+
+```{r}
+dratio <- function(z, mu_X = 3.7, sigma_X = 0.74, mu_Y = 1.6, sigma_Y = 0.8) {
+  a_z = sqrt((1/sigma_X^2)*z^2 + (1/sigma_Y^2))
+  b_z = ((mu_X/sigma_X^2)*z + (mu_Y/sigma_Y))
+  c = ((mu_X^2/sigma_X^2)*z + (mu_Y^2/sigma_Y))
+  d_z = exp(1)^((b_z^2 - c*a_z^2)/(2*a_z)^2)
+  p_z =   p_z = (b_z*d_z)/(a_z^3)*((1/(sqrt(2*pi)*sigma_X*sigma_Y))*(pnorm(b_z/a_z)-pnorm(-b_z/a_z)) + (1/(a_z^2*pi*sigma_X*sigma_Y))*exp(-c/2))
+  return(p_z)
+}
+
+dratio(1.5) #Exemple to test accuracy of the model
+
+
+```
+
+#### 2.4
+
+```{r}
+e <- c(Lii = .25, Liii = .35, Liv = .2, Hi = .75, Hii = .65, Hiii = .6)
+c <- c(Lii = 1.5, Liii = 1.5, Liv = 2, Hi = 4, Hii = 4.5, Hiii = 4.5)
+L <- function(chi, e, c) {
+( (1 - 2 * e) * (2 * pnorm(sqrt(2) * (2 * chi - 2 * c)) - 1) + 1 ) / 2
+  
+
+
+  curve(L(chi, e[1], c[1]), from = 0, to = 7, ylim = 0:1, xname = "chi",
+xlab = expression(chi), ylab = "Likelihood", las = 1)
+legend("bottomleft", legend = c("ii", "iii", "iv"), lty = 1, col = 1:3,
+title = "Low ECS", ncol = 3, box.lwd = NA, bg = "lightgrey")
+legend("bottomright", legend = c("i", "ii", "iii"), lty = 2, col = 4:6,
+title = "High ECS", ncol = 3, box.lwd = NA, bg = "lightgrey")
+for (j in 2:3) curve(L(chi, e[j], c[j]), add = TRUE, col = j, xname = "chi")
+for (j in 4:6) curve(L(chi, e[j], c[j]), add = TRUE, col = j, xname = "chi", lty = 2)
+  
+  
+}
+```
