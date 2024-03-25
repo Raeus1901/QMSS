@@ -1,0 +1,162 @@
+---
+title: "Untitled"
+author: "Jean Treves"
+format: pdf
+editor: visual
+execute: 
+  echo: true 
+---
+
+## 1 Auto insurance Claim
+
+First, load the data.
+
+```{r}
+FILE <- "telematics_syn-032021.csv"
+if (!file.exists(FILE)) {
+ROOT <- "http://www2.math.uconn.edu/~valdez/"
+download.file(paste0(ROOT, FILE), destfile = FILE)
+}
+UBI <- readr::read_csv(FILE, show_col_types = FALSE)
+```
+
+Second, take a subset of the provided data
+
+```{r}
+library(dplyr)
+incl <- sample(1:nrow(UBI), size = 10000, replace = FALSE)
+training <- slice(UBI, incl)
+UBI <- slice(UBI, -incl)
+incl <- sample(1:nrow(UBI), size = 10000, replace = FALSE)
+testing <- slice(UBI, incl)
+```
+
+## 1.1 Poisson model 
+
+```{r}
+
+library(brms)
+
+set.seed(193830)
+
+formula <- NB_Claim ~ Car.use + Region + s(Total.miles.driven)
+
+# Estimate the model
+model <- brm(
+  formula = formula,
+  data = training,
+  family = poisson(link = "log"),
+  save_pars = save_pars(all = TRUE)
+)
+
+# Display the results
+summary(model)
+```
+
+## 1.2 Zero inflated poisson model
+
+In the auto insurance industry, a significant proportion of policyholders may not file any claims during a given period. This can lead to an excess of zeros in the dataset, which might not be adequately captured by traditional count models like the Poisson model. A zero-inflated model addresses this issue by combining a Bernoulli model for whether the outcome is zero (i.e., no claim) and a count model for the number of events (i.e., the number of claims), given that the Bernoulli random variable is not zero. This way, the zero-inflated model can better account for the excess zeros in the dataset and provide a more accurate representation of the data.
+
+```{r}
+formula_zi <- brmsformula(NB_Claim ~ Car.use + Region +  s(Total.miles.driven), zi ~ Territory + Insured.sex)
+
+# Estimate the zero-inflated Poisson model
+model_zi <- brm(
+  formula = formula_zi,
+  data = training,
+  family = zero_inflated_poisson(link = "log"),
+  save_pars = save_pars(all = TRUE)
+)
+
+# Display the results
+summary(model_zi)
+```
+
+## 1.3 Model comparison 
+
+```{r}
+library(brms)
+loo_poisson <- loo(model)
+loo_zero_inflated <- loo(model_zi)
+
+# Compare the models using loo_compare
+models_list <- list(poisson = loo_poisson, zero_inflated = loo_zero_inflated)
+loo_results <- loo_compare(models_list)
+print(loo_results)
+```
+
+```{r}
+log_mean_exp <- function(x) {
+  max_x <- max(x)
+  return(max_x + log(sum(exp(x - max_x))))
+}
+
+# Calculate the log probabilities for the testing data
+log_probs <- log_lik(selected_model, newdata = testing)
+
+# Obtain a vector with the average log predictive probability for each testing observation
+avg_log_probs <- apply(log_probs, MARGIN = 2, FUN = log_mean_exp)
+
+# Estimate the ELPD for the entire testing data
+elpd_testing <- sum(avg_log_probs)
+print(elpd_testing)
+```
+
+## 2. Pandemic election 
+
+```{r}
+suppressPackageStartupMessages(library(haven))
+if (!file.exists("GSS_2020_panel_stata_1a.zip")) {
+download.file("https://gss.norc.org/Documents/stata/GSS_2020_panel_stata_1a.zip",
+destfile = "GSS_2020_panel_stata_1a.zip")
+unzip("GSS_2020_panel_stata_1a.zip")
+}
+GSS <- as_factor(read_dta("gss2020panel_r1a.dta"))
+```
+
+```{r}
+ANES <- as_factor(read_dta("anes_timeseries_2020_gss_stata_20220408.dta"))
+```
+
+```{r}
+library(dplyr)
+ANES_GSS <- inner_join(ANES, GSS, by = c(YEARID = "yearid"))
+```
+
+## 2.1 Proportional odds model 
+
+```{r}
+library(brms)
+
+ANES_GSS_clean <- ANES_GSS %>%
+  filter(!is.na(abnomore_1a) & !is.na(V202008) & !is.na(mar1_1a) & !is.na(age_1a))
+
+prior(normal(0, 1), class = "Intercept")
+
+get_prior(agekdbrn_1a ~ V202008 + (1 + V202008 | age_1a), data = ANES_GSS_clean, family = cumulative(link = "logit"))
+
+my_prior_updated <- 
+  prior(normal(-0.1, 0.5), class = "b", coef = "agekdbrn_1") +
+  prior(normal(0.25, 0.5), class = "b", coef = "V202008") +
+  prior(normal(0.25, 0.5), class = "b", coef = "age_1a") +
+  prior(normal(0, 1), class = "Intercept")
+
+ordinal_model <- brm(
+  formula = agekdbrn_1a ~ V202008 + (1 + V202008 | age_1a),
+  data = ANES_GSS_clean, 
+  family = cumulative(link = "logit"), 
+  prior = my_prior_updated
+)
+
+summary(ordinal_model)
+```
+
+## 2.2 Vizualisation
+
+```{r}
+plot(conditional_effects(post, "age_1a"), categorical = TRUE)
+```
+
+## 2.3 Explanation
+
+From a Frequentist perspective, hierarchical models can be seen as inappropriate as they assume that group-level parameters are exchangeable, which means they are drawn from a common higher-level distribution. Frequentist approaches usually incorporate the assumption data is distributed normally, and thus may view it as a limitation. Furthermore, the hierarchical models rely on the use of prior distributions for the group-level parameters, contrary to frequentists who only use observed data as they exclude updated beliefs/information from their models. Using a maximum likelihood function would not work neither as the information we have could be complex and abstract, requiring to use higher-dimensional hyper parameters to make it work with the frequenstist approach excludes: One of the key assumptions of MLE is that the sample size is large enough for the asymptotic properties (such as consistency and asymptotic normality) to hold. However, in hierarchical models, especially with a small number of groups or unbalanced group sizes, the sample size at each level may not be large enough to guarantee these asymptotic properties, leading to biased or inefficient estimates. Because frequentists focus on point estimates and confidence intervals rather than probability distribution, the given outcome would not fit then. Other frequentist issues arise such as over fitting, biased estimates and limited comparison with different random structures.
