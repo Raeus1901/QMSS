@@ -54,15 +54,15 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 ## 💡 Machine Learning 
 
-[Lab 1: Pandas-Seaborne Data Manipulation ](Machine%20Learning%20Analysis/Lab%201.ipynb)
+[Lab 1: Pandas-Seaborne Data Manipulation ](Machine%20Learning/Lab%201.ipynb)
 
-[Lab 2: SkLearn Penalized Regression and Classifiers ](Machine%20Learning%20Analysis/Lab%202)
+[Lab 2: SkLearn Penalized Regression and Classifiers ](Machine%20Learning/Lab%202)
 
-[Lab 3: SkLearn-SciPy K Means and Hierchal Clusters + PCA ](Machine%20Learning%20Analysis/Lab%203.ipynb)
+[Lab 3: SkLearn-SciPy K Means and Hierchal Clusters + PCA ](Machine%20Learning/Lab%203.ipynb)
 
-[Lab 4: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning%20Analysis/Lab%204.ipynb)
+[Lab 4: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning/Lab%204.ipynb)
 
-[Final: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning%20Analysis/Final.ipynb)
+[Final: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning/Final.ipynb)
 
 
 ## 🤖 Natural Language Processing 
