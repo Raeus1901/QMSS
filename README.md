@@ -19,7 +19,16 @@ The hypothesis validation encompasses three critical components:
 The completed model meets all these prerequisites, confirming a significant impact of cognitive biases on stock prices before the COVID-19 pandemic and identifying a subsequent attenuation of this effect.
 
 
-## 📊 Data Science 
+## 📜 Bayesian Statistics
+
+[Lab 1: Normal and Gaussian Density Probability Mass](Bayesian%20Statistics/Lab%201)
+
+[Lab 2: Posterior Information and Beta-Binomial Distribution](Bayesian%20Statistics/Lab%202)
+
+[Lab 3: Zero-Inflated Poisson and Hierarchal Models with loo-compare benchmarking](Bayesian%20Statistics/Lab%203)
+
+
+## 📊 Data Sciences 
 
 [Lab 1: Data Visualisation and Manipulation](Data%20Science/Lab%201)
 
@@ -34,22 +43,6 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Lab 6: First Differences Regression applied on Naive ("pooled") OLS Model](Data%20Science/Lab%206)
 
 [Midterm](Data%20Science/Midterm)
-
-## ⏱️ Time series analysis 
-
-[Lab 1: Unpooled Regression and Panel Data Analysis](Time%20Series%20Analysis/Lab%201)
-
-[Lab 2: Multiple Variable Survival Analysis with Cox Hazard](Time%20Series%20Analysis/Lab%202)
-
-[Lab 3: ARIMA Regression with First Differenciation and Trends](Time%20Series%20Analysis/Lab%203)
-
-## 🕸️ Social network analysis
-
-[Lab 1: Ego-Network Measures with Regression](Social%20Network%20Analysis/Lab%201)
-
-[Lab 2: Degree Centrality Measures and Nodes Analysis ](Social%20Network%20Analysis/Lab%202)
-
-[Lab 3: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
 
 
 ## 💡 Machine Learning 
@@ -76,13 +69,26 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Lab 4: SkLearn Real-Time Reddit Data Classifier](Natural%20Language%20Processing/Lab%204)
 
 
-## 📜 Bayesian Statistics
+## ⏱️ Time Series Analysis 
 
-[Lab 1: Normal and Gaussian Density Probability Mass](Bayesian%20Statistics/Lab%201)
+[Lab 1: Unpooled Regression and Panel Data Analysis](Time%20Series%20Analysis/Lab%201)
 
-[Lab 2: Posterior Information and Beta-Binomial Distribution](Bayesian%20Statistics/Lab%202)
+[Lab 2: Multiple Variable Survival Analysis with Cox Hazard](Time%20Series%20Analysis/Lab%202)
 
-[Lab 3: Zero-Inflated Poisson and Hierarchal Models with loo-compare benchmarking](Bayesian%20Statistics/Lab%203)
+[Lab 3: ARIMA Regression with First Differenciation and Trends](Time%20Series%20Analysis/Lab%203)
+
+
+## 🕸️ Social Network Analysis
+
+[Lab 1: Ego-Network Measures with Regression](Social%20Network%20Analysis/Lab%201)
+
+[Lab 2: Degree Centrality Measures and Nodes Analysis ](Social%20Network%20Analysis/Lab%202)
+
+[Lab 3: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
+
+
+
+
 
 
 
