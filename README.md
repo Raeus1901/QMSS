@@ -80,21 +80,20 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 ## ⏱️ Time Series Analysis 
 
-[Lab 1: Unpooled Regression and Panel Data Analysis](Social%20Network%20Analysis/Lab%201)
+[Lab 1: Unpooled Regression and Panel Data Analysis](https://github.com/Raeus1901/QMSS/blob/721043e9eb1d4b8ee75f368c9c2a451d762a2ed9/Time%20Series%20Analysis%20/Lab%201)
 
-[Lab 2: Multiple Variable Survival Analysis with Cox Hazard](Social%20Network%20Analysis/Lab%202)
+[Lab 2: Multiple Variable Survival Analysis with Cox Hazard](https://github.com/Raeus1901/QMSS/blob/4f8d3114fd35298bf884c8ac945140e46e28ee71/Time%20Series%20Analysis%20/Lab%202)
 
-[Lab 3: ARIMA Regression with First Differenciation and Trends](Social%20Network%20Analysis/Lab%203)
-
+[Lab 3: ARIMA Regression with First Differenciation and Trends](https://github.com/Raeus1901/QMSS/blob/4f8d3114fd35298bf884c8ac945140e46e28ee71/Time%20Series%20Analysis%20/Lab%203)
 
 
 ## 🕸️ Social Network Analysis
 
-[Lab 1: Ego-Network Measures with Regression](https://github.com/Raeus1901/QMSS/blob/721043e9eb1d4b8ee75f368c9c2a451d762a2ed9/Time%20Series%20Analysis%20/Lab%201)
+[Lab 1: Ego-Network Measures with Regression](Social%20Network%20Analysis/Lab%201)
 
-[Lab 2: Degree Centrality Measures and Nodes Analysis ](https://github.com/Raeus1901/QMSS/blob/4f8d3114fd35298bf884c8ac945140e46e28ee71/Time%20Series%20Analysis%20/Lab%202)
+[Lab 2: Degree Centrality Measures and Nodes Analysis](Social%20Network%20Analysis/Lab%202)
 
-[Lab 3: Community Detection Models and Advanced Vizualisation](https://github.com/Raeus1901/QMSS/blob/4f8d3114fd35298bf884c8ac945140e46e28ee71/Time%20Series%20Analysis%20/Lab%203)
+[Lab 3: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
 
 
 
