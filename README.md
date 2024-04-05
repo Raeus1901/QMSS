@@ -61,7 +61,7 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 [Lab 4: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning/lab%204.ipynb)
 
-[Final: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning/Final.ipynb)
+[Final](Machine%20Learning/Final.ipynb)
 
 
 
