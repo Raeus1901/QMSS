@@ -49,14 +49,14 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 [Lab 2: Degree Centrality Measures and Nodes Analysis ](Social%20Network%20Analysis/Lab%202)
 
-[Lab 2: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
+[Lab 3: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
 
 
 ## 💡 Machine Learning 
 
 [Lab 1: Pandas-Seaborne Data Manipulation ](Machine%20Learning/lab%201.ipynb)
 
-[Lab 2: SkLearn Penalized Regression and Classifiers ](Machine%20Learning/lab%202)
+[Lab 2: SkLearn Penalized Regression and Classifiers ](Machine%20Learning/Lab_2)
 
 [Lab 3: SkLearn-SciPy K Means and Hierchal Clusters + PCA ](Machine%20Learning/Lab%203.ipynb)
 
@@ -78,11 +78,11 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 ## 📜 Bayesian Statistics
 
-[Lab 1: Normal and Gaussian Density Probability Mass](Bayesian%20Stastics%20/Lab%201)
+[Lab 1: Normal and Gaussian Density Probability Mass](Bayesian%20Stastics/Lab%201)
 
-[Lab 2: Posterior Information and Beta-Binomial Distribution](Bayesian%20Stastics%20/Lab%202)
+[Lab 2: Posterior Information and Beta-Binomial Distribution](Bayesian%20Stastics/Lab%202)
 
-[Lab 3: Zero-Inflated Poisson and Hierarchal Models with loo-compare benchmarking](Bayesian%20Stastics%20/Lab%203)
+[Lab 3: Zero-Inflated Poisson and Hierarchal Models with loo-compare benchmarking](Bayesian%20Stastics/Lab%203)
 
 
 
