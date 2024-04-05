@@ -77,6 +77,14 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Lab 4: SkLearn Real-Time Reddit Data Classifier](Natural%20Language%20Processing/Lab%204)
 
 
+## 🕸️ Social Network Analysis
+
+[Lab 1: Ego-Network Measures with Regression](Social%20Network%20Analysis/Lab%201)
+
+[Lab 2: Degree Centrality Measures and Nodes Analysis](Social%20Network%20Analysis/Lab%202)
+
+[Lab 3: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
+
 
 ## ⏱️ Time Series Analysis 
 
@@ -86,14 +94,6 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 [Lab 3: ARIMA Regression with First Differenciation and Trends](https://github.com/Raeus1901/QMSS/blob/4f8d3114fd35298bf884c8ac945140e46e28ee71/Time%20Series%20Analysis%20/Lab%203)
 
-
-## 🕸️ Social Network Analysis
-
-[Lab 1: Ego-Network Measures with Regression](Social%20Network%20Analysis/Lab%201)
-
-[Lab 2: Degree Centrality Measures and Nodes Analysis](Social%20Network%20Analysis/Lab%202)
-
-[Lab 3: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
 
 
 
