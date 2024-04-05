@@ -37,7 +37,7 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 ## ⏱️ Time series analysis 
 
-[Lab 1: Unpooled Regression and Panel Data Analysis](Time%20Series%20Analysis/Lab%20A)
+[Lab 1: Unpooled Regression and Panel Data Analysis](Time%20Series%20Analysis/Lab%201)
 
 [Lab 2: Multiple Variable Survival Analysis with Cox Hazard](Time%20Series%20Analysis/Lab%202)
 
