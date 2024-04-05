@@ -19,6 +19,8 @@ The hypothesis validation encompasses three critical components:
 The completed model meets all these prerequisites, confirming a significant impact of cognitive biases on stock prices before the COVID-19 pandemic and identifying a subsequent attenuation of this effect.
 
 
+
+
 ## 📜 Bayesian Statistics
 
 [Lab 1: Normal and Gaussian Density Probability Mass](Bayesian%20Statistics/Lab%201)
@@ -26,6 +28,8 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Lab 2: Posterior Information and Beta-Binomial Distribution](Bayesian%20Statistics/Lab%202)
 
 [Lab 3: Zero-Inflated Poisson and Hierarchal Models with loo-compare benchmarking](Bayesian%20Statistics/Lab%203)
+
+
 
 
 ## 📊 Data Sciences 
@@ -45,6 +49,8 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Midterm](Data%20Science/Midterm)
 
 
+
+
 ## 💡 Machine Learning 
 
 [Lab 1: Pandas-Seaborne Data Manipulation ](Machine%20Learning/lab%201.ipynb)
@@ -58,6 +64,8 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Final: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning/Final.ipynb)
 
 
+
+
 ## 🤖 Natural Language Processing 
 
 [Lab 1: Python Basics](Natural%20Language%20Processing/Lab%201)
@@ -69,6 +77,8 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Lab 4: SkLearn Real-Time Reddit Data Classifier](Natural%20Language%20Processing/Lab%204)
 
 
+
+
 ## ⏱️ Time Series Analysis 
 
 [Lab 1: Unpooled Regression and Panel Data Analysis](Time%20Series%20Analysis/Lab%201)
@@ -78,9 +88,11 @@ The completed model meets all these prerequisites, confirming a significant impa
 [Lab 3: ARIMA Regression with First Differenciation and Trends](Time%20Series%20Analysis/Lab%203)
 
 
+
+
 ## 🕸️ Social Network Analysis
 
-[Lab 1: Ego-Network Measures with Regression](Social%20Network%20Analysis/Lab%201)
+[Lab 1: Ego-Network Measures with Regression](https://github.com/Raeus1901/QMSS/blob/721043e9eb1d4b8ee75f368c9c2a451d762a2ed9/Time%20Series%20Analysis%20/Lab%201)1)
 
 [Lab 2: Degree Centrality Measures and Nodes Analysis ](Social%20Network%20Analysis/Lab%202)
 
