@@ -4,7 +4,7 @@
 
 ## 📖 Master Thesis
 
-## [Master Code](Master%20Thesis)
+### [Master Code](Master%20Thesis)
 
 This code was developed for my Master's Thesis, which aims to predict price fluctuations in renewable energy stocks through sentiment analysis in time series regression. The study explores how cognitive biases—unquantified variables—impact investment decisions, independent of the available factual information. Examples include anchoring, where an investor hesitates to buy a stock deemed overvalued based on current data, and loss aversion, where there's reluctance to invest in a stock due to perceived inadequate returns based on historical data.
 
