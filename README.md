@@ -78,15 +78,13 @@ The completed model meets all these prerequisites, confirming a significant impa
 
 
 
-
 ## ⏱️ Time Series Analysis 
 
-[Lab 1: Unpooled Regression and Panel Data Analysis](Time%20Series%20Analysis/Lab%201)
+[Lab 1: Unpooled Regression and Panel Data Analysis](Social%20Network%20Analysis/Lab%201)
 
-[Lab 2: Multiple Variable Survival Analysis with Cox Hazard](Time%20Series%20Analysis/Lab%202)
+[Lab 2: Multiple Variable Survival Analysis with Cox Hazard](Social%20Network%20Analysis/Lab%202)
 
-[Lab 3: ARIMA Regression with First Differenciation and Trends](Time%20Series%20Analysis/Lab%203)
-
+[Lab 3: ARIMA Regression with First Differenciation and Trends](Social%20Network%20Analysis/Lab%203)
 
 
 
