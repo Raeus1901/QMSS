@@ -1,5 +1,5 @@
 # 🌴 Hello 🌴
- Appreciate you stumbled upon my page. Graduated from Columbia University with a M.A in Quantitative Methods in Social Sciences (QMSS), currently in New-York. Find below the various coding assignements I did as part of my time in gradschool alongside to my final thesis. You can find me on [![LinkedIn][3.2]][2]. 
+ Appreciate you stumbled upon my page. I've graduated from Columbia University with a M.A in Quantitative Methods in Social Sciences (QMSS), currently in New-York. Find below the various coding assignements I did as part of my time in gradschool alongside to my final thesis. You can find me on [![LinkedIn][3.2]][2]. 
 
 
 ## 📖 Master Thesis
