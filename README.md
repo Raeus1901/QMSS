@@ -1,24 +1,22 @@
-# 🌴 Hello 🌴
- Appreciate you stumbled upon my page. I've graduated from Columbia University with a M.A in Quantitative Methods in Social Sciences (QMSS), currently in New-York. Find below the various coding assignements I did as part of my time in gradschool alongside to my final thesis. You can find me on [![LinkedIn][3.2]][2]. 
+#  Hello 
+Graduated from Columbia University with a M.A in Quantitative Methods in Social Sciences (QMSS), currently in New-York. Find below the various coding assignements I did as part of my time in gradschool alongside to my final thesis. You can find me on [![LinkedIn][3.2]][2]. 
 
 
 ## 📖 Master Thesis
 
 ###                     [Master Code](Master%20Thesis)
 
-This code was developed for my Master's Thesis, which aims to predict price fluctuations in renewable energy stocks through sentiment analysis in time series regression. The study explores how cognitive biases—unquantified variables—impact investment decisions, independent of the available factual information. Examples include anchoring, where an investor hesitates to buy a stock deemed overvalued based on current data, and loss aversion, where there's reluctance to invest in a stock due to perceived inadequate returns based on historical data.
+The study explores the relationship between cognitive biases and investment decisions. Examples include anchoring (doubt about buying a stock) and loss aversion (reluctance to invest based on historical data). Through API extraction on Python, the algorithm retrieves performance data for the five companies with the highest market share in renewable energy from 2014 to 2024.
 
-The hypothesis validation encompasses three critical components:
+The hypothesis validation encompasses three critical components.
 
-1) **Sentiment Quantification**: Utilizing a web crawler, the project collects textual data from reliable investment reports for each company every quarter from 2014 to 2024. The FinBERT model is then used to categorize the nuanced financial language in these reports into floating-point sentiment scores ranging from -1 to 1.
+1) **Sentiment Quantification**: Automated a web crawler to retrieve text corpus from quarterly earning reports, tokenizing it through stemming. Employed the FinBERT model to evaluate nuanced financial words to sentiment scores ranging from -1 to 1.
+   
+3) **Statistical Significance and Output**: Applied an ARIMA regression using daily stock prices correlated to quarterly earnings results and their sentiment variables. Found evidences of hidden price movements independent of company performance through statistical evidence p-value (≥ 0;95) and stochastic factors.
 
-2) **Statistical Significance and Output**: The research applies a frequentist statistical method to ascertain the influence of sentiment scores on stock prices, specifically focusing on the closing prices on the days the quarterly earnings reports are published. Significance is determined when sentiment scores yield a p-value greater than 0.95. Additionally, the study employs ARIMA modeling to investigate stochastic effects, considering the model significant if it presents an MA score of 1 or higher with a p-value over 0.95, thus indicating a substantial impact of cognitive biases on stock prices.
+4) **Model Statistical Diagnosis**: Diagnosed the model to confirm its reliability. Performed data analysis test to look for lags and autocorrelating factors within the time series, ensured proper data extraction, equalizing the residual variables, minimizing deviation, and standard error score.
 
-3) **Model Statistical Diagnosis**: Ensuring the model's realism involves confirming that its error variance is low and its residuals are white noise, indicating all information has been adequately extracted and modeled. The model also undergoes thorough checks for hidden variables, autocorrelation, and heteroskedasticity, ensuring its structural integrity. Furthermore, the analysis includes examining the residual distribution to confirm that the sample used represents the entire data set accurately over time, suggesting that unquantifiable variables likely influence stock prices.
-
-The completed model meets all these prerequisites, confirming a significant impact of cognitive biases on stock prices before the COVID-19 pandemic and identifying a subsequent attenuation of this effect.
-
-
+Demonstrated a significant relationship between biases over a company and its stock prices during the earning period, finding a decreasing effect before and after the COVID-19 pandemic. Concluded on better trust in emerging renewable technologies due to less impactful sentiment score over time. Asserted for more availability of objective information to drive the investor perception on a company's performance based upon the efficient market hypothesis.
 
 
 ## 📜 Bayesian Statistics
