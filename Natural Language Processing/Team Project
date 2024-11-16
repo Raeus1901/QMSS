@@ -1,0 +1,213 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+import pandas as pd
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer, PorterStemmer
+from sklearn.feature_selection import chi2, SelectKBest
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import precision_recall_fscore_support, classification_report, confusion_matrix, accuracy_score, roc_auc_score, f1_score
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import pickle
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Ensure NLTK resources are downloaded
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+# Correct file path assignment
+file_path = "/Users/jean/Desktop/funcs/RateMyProfessor_Sample_data.csv"
+
+# Reading the CSV file
+data = pd.read_csv(file_path)
+
+# List of columns to drop
+columns_to_drop = ['gives_good_feedback', 'respected', 'participation_matters',
+                   'clear_grading_criteria', 'skip_class', 'amazing_lectures',
+                   'inspirational', 'tough_grader', 'hilarious', 'get_ready_to_read',
+                   'lots_of_homework', 'accessible_outside_class', 'lecture_heavy',
+                   'extra_credit', 'graded_by_few_things', 'group_projects', 'test_heavy',
+                   'so_many_papers', 'beware_of_pop_quizzes', 'IsCourseOnline',
+                   'for_credits', 'grades', 'help_useful', 'help_not_useful', 'gender', 
+                   'year_since_first_review', 'diff_index', 'take_again', 'post_date']
+
+# Dropping the specified columns
+df = data.drop(columns=columns_to_drop)
+
+# Function to categorize departments
+def categorize_department(department_name):
+    stem_keywords = ['Astronomy', 'Computer Science', 'Physics', 'Mathematics', 
+                     'Science', 'Engineering', 'Electrical Engineering', 'Health Science',
+                     'Library Science', 'Civil Engineering', 'Computer Engineering',
+                     'Automotive Technology', 'Electrical Technology', 'Materials Science', 'MacRomolecular Science & Eng',
+                     'Earth Science', 'Mechanical Engineering', 'Chemistry', 'Biology', 'Medicine', 'Anatomy', 'Pharmacology', 'Biochemistry', 'Nutrition', 
+                     'Aviation', 'Kinesiology', 'Nursing', 'Computer Information Systems', 'Pharmacy', 'Statistics']
+    
+    if any(re.search(r'\b' + re.escape(keyword) + r'\b', department_name, re.IGNORECASE) for keyword in stem_keywords):
+        return 'STEM'
+    else:
+        return 'Non-STEM'
+
+df['stem_cat'] = df['department_name'].apply(categorize_department)
+
+# Text cleaning functions
+def clean_txt(text):
+    clean_text = re.sub("[^A-Za-z\s]", " ", str(text)).lower().strip()
+    return clean_text
+
+def remove_sw(text):
+    sw = stopwords.words('english') 
+    text = clean_txt(text)
+    words = [word for word in text.split() if word not in sw]
+    return ' '.join(words)
+
+def get_lemma(text):
+    lemmatizer = WordNetLemmatizer()
+    words = [lemmatizer.lemmatize(word) for word in text.split()]
+    return ' '.join(words)
+
+def get_stem(text):
+    ps = PorterStemmer()    
+    words = [ps.stem(word) for word in text.split()]
+    return ' '.join(words)
+
+# Apply text cleaning to comments
+df['comments_clean'] = df['comments'].apply(remove_sw)
+df['comments_lemma'] = df['comments_clean'].apply(get_lemma)
+df['comments_stem'] = df['comments_clean'].apply(get_stem)
+
+# Function to write and read pickle files
+def write_pickle(obj_in, path_in, file_name):
+    with open(path_in + file_name + '.pk', 'wb') as f:
+        pickle.dump(obj_in, f)
+
+def read_pickle(path_in, file_name):
+    with open(path_in + file_name + '.pk', 'rb') as f:
+        return pickle.load(f)
+
+# Vectorization function
+def vec_fun(df_in, name_in, m_in, n_in, label_in, path_in):
+    if name_in == "tfidf":
+        vectorizer = TfidfVectorizer(ngram_range=(m_in, n_in))
+    elif name_in == "vec":
+        vectorizer = CountVectorizer(ngram_range=(m_in, n_in))
+    else:
+        raise ValueError("Invalid transformer name. Choose 'vec' or 'tfidf'.")
+    xform_data = vectorizer.fit_transform(df_in)
+    feature_names = vectorizer.get_feature_names_out()
+    xform_df = pd.DataFrame(xform_data.toarray(), columns=feature_names)
+    xform_df.index = label_in.index
+    write_pickle(vectorizer, path_in, name_in)
+    return xform_df
+
+# Feature selection using Chi-Square
+def chi_fun(df_in, label_in, k_in, path_out, name_in):
+    feat_sel = SelectKBest(score_func=chi2, k=k_in)
+    dim_data = feat_sel.fit_transform(df_in, label_in)
+    feature_names = df_in.columns[feat_sel.get_support(indices=True)]
+    dim_df = pd.DataFrame(dim_data, columns=feature_names)
+    write_pickle(feat_sel, path_out, name_in)
+    return dim_df
+
+# Model training function
+def model_fun(df_in, label_in, test_size, path_in, model_name):
+    model = RandomForestClassifier(random_state=123)
+    X_train, X_test, y_train, y_test = train_test_split(df_in, label_in, test_size=test_size, random_state=42)
+    model.fit(X_train, y_train)
+    write_pickle(model, path_in, model_name)
+    y_pred = model.predict(X_test)
+    metrics = precision_recall_fscore_support(y_test, y_pred, average='weighted')
+    metrics_df = pd.DataFrame(metrics[:3], index=["precision", "recall", "F1"], columns=['Score'])
+    print(metrics_df)
+    return model
+
+# Sentiment analysis
+analyzer = SentimentIntensityAnalyzer()
+df['comments_stem_sentiment'] = df['comments_stem'].apply(lambda x: analyzer.polarity_scores(str(x))['compound'])
+df['comments_stem_sentiment_category'] = df['comments_stem_sentiment'].apply(
+    lambda x: 'positive' if x >= 0.05 else ('negative' if x <= -0.05 else 'neutral')
+)
+
+# Grouping and analyzing sentiments
+def analyze_sentiments(df_subset, group_by, comment_types=['clean', 'stem', 'lemma'], task='percentages'):
+    grouped_results = {}
+    for group_name, group_df in df_subset.groupby(group_by):
+        results = {}
+        for comment_type in comment_types:
+            sentiment_column = f'comments_{comment_type}_sentiment'
+            if sentiment_column not in group_df.columns:
+                group_df[sentiment_column] = group_df[f'comments_{comment_type}'].apply(
+                    lambda x: analyzer.polarity_scores(str(x))['compound'] if pd.notnull(x) else 0
+                )
+            if task == 'percentages':
+                sentiment_category = group_df[sentiment_column].apply(
+                    lambda x: 'positive' if x >= 0.05 else ('negative' if x <= -0.05 else 'neutral')
+                )
+                value_counts = sentiment_category.value_counts()
+                total_comments = value_counts.sum()
+                results[comment_type] = (value_counts / total_comments) * 100
+            elif task == 'first_five':
+                results[comment_type] = group_df[sentiment_column].head(5).tolist()
+        grouped_results[group_name] = results
+    return grouped_results
+
+# Encode the STEM category as a binary variable
+df['is_stem'] = df['stem_cat'].apply(lambda x: 1 if x == 'STEM' else 0)
+
+# Prepare datasets for each comment type model
+comment_types = ['comments_clean', 'comments_stem', 'comments_lemma']
+classification_results = {}
+
+for comment_type in comment_types:
+    sentiment_column = f'{comment_type}_sentiment'
+    if sentiment_column not in df.columns:
+        df[sentiment_column] = df[comment_type].apply(lambda x: analyzer.polarity_scores(str(x))['compound'])
+    model_df = df[['student_star', 'student_difficult', sentiment_column, 'is_stem']].dropna()
+    X = model_df[['student_star', 'student_difficult', sentiment_column]]
+    y = model_df['is_stem']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    classifier = RandomForestClassifier(random_state=42)
+    classifier.fit(X_train, y_train)
+    predictions = classifier.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+    roc_auc = roc_auc_score(y_test, predictions)
+    f1 = f1_score(y_test, predictions, average='weighted')
+    classification_report_result = classification_report(y_test, predictions, zero_division=1)
+    confusion_matrix_result = confusion_matrix(y_test, predictions)
+    classification_results[comment_type] = {
+        'accuracy': accuracy,
+        'roc_auc': roc_auc,
+        'f1_score': f1,
+        'classification_report': classification_report_result,
+        'confusion_matrix': confusion_matrix_result
+    }
+
+# Output the classification results
+for comment_type, results in classification_results.items():
+    print(f"Results for {comment_type} model:")
+    print(f"Accuracy: {results['accuracy']}")
+    print(f"ROC-AUC: {results['roc_auc']}")
+    print(f"F1-Score: {results['f1_score']}")
+    print(f"Classification Report:\n{results['classification_report']}")
+    print(f"Confusion Matrix:\n{results['confusion_matrix']}\n")
+
+# Visualization
+metrics_df = pd.DataFrame([
+    {'Model': 'Random Forest', 'Comment Type': ct, 'Accuracy': res['accuracy'], 'ROC-AUC': res['roc_auc'], 'F1-Score': res['f1_score']}
+    for ct, res in classification_results.items()
+])
+
+metrics_df = metrics_df.melt(id_vars=['Model', 'Comment Type'], var_name='Metric', value_name='Score')
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Comment Type', y='Score', hue='Metric', data=metrics_df)
+plt.title('Performance Metrics of Random Forest Models by Comment Type')
+plt.ylabel('Score')
+plt.xlabel('Comment Type')
+plt.legend(title='Metric')
+plt.show()
