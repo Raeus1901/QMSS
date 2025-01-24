@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov  6 17:30:26 2023
-
-@author: jean
+Corrected & Synthesized Script
+Author: Jean (Modified)
+Date: January 2025
 """
-import sys
-sys.path.append('/Users/jean/Desktop/')  # Adjust this path if necessary
-from funcs.utils import *
 
+import sys
+sys.path.append('/Users/jean/Desktop/')  # Chemin à ajuster si nécessaire
+
+# === Imports ===
 import pandas as pd
 import yfinance as yf
 import statsmodels.api as sm
@@ -20,509 +21,325 @@ import time
 import warnings
 import matplotlib.dates as mdates
 
+# Stationnarité, ARIMA, et tests divers
 from pmdarima.arima import auto_arima
 from pmdarima.arima.utils import ndiffs
-import statsmodels.api as sm
 from statsmodels.stats.diagnostic import acorr_ljungbox
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from statsmodels.tsa.stattools import adfuller, acf, pacf, kpss
+from statsmodels.tsa.stattools import adfuller, kpss
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.stats.stattools import durbin_watson
 from scipy.stats import shapiro
 
-from crawler import write_crawl_results
-from transformers import BertTokenizer, BertForSequenceClassification
-from transformers import pipeline
+# Eventuels modules externes
+from crawler import write_crawl_results  # suppose l’existence de ce module
+from transformers import BertTokenizer, BertForSequenceClassification, pipeline
 
-from stargazer.stargazer import Stargazer
+warnings.filterwarnings('ignore')
 
 
-
-# Define the tickers and your API key
+# === 1) Paramètres généraux ===
 tickers = ['FSLR', 'GE', 'NEE', 'TSLA', 'PLUG']
-api_key = '5Ugv1HdB3t2uhmYtGRmTjjKMCCMEeqE5'  # Replace with your actual API key
+api_key = 'YOUR_API_KEY'  # Remplacer par votre clé Financial Modeling Prep
 
-# Define the function to fetch earnings data
+# === 2) Fonction pour récupérer les earnings surprises depuis l’API FMP ===
 def fetch_earnings_data(ticker, api_key):
+    """
+    Récupère les données d'earnings surprises pour un ticker donné via l’API FinancialModelingPrep.
+    """
     api_url = f"https://financialmodelingprep.com/api/v3/earnings-surprises/{ticker}?apikey={api_key}"
     try:
         response = requests.get(api_url)
-        response.raise_for_status()  # Raise an HTTPError if the HTTP request returned an unsuccessful status code
+        response.raise_for_status()
         earnings_data = response.json()
         earnings_df = pd.DataFrame(earnings_data)
-        earnings_df['date'] = pd.to_datetime(earnings_df['date'])
-        earnings_df['earnings_surprise'] = earnings_df['actualEarningResult'] - earnings_df['estimatedEarning']
+        if not earnings_df.empty:
+            earnings_df['date'] = pd.to_datetime(earnings_df['date'])
+            earnings_df['earnings_surprise'] = earnings_df['actualEarningResult'] - earnings_df['estimatedEarning']
         return earnings_df
-    
-    except requests.exceptions.HTTPError as errh:
-        print(f"Http Error for {ticker}: {errh}")
-    except requests.exceptions.ConnectionError as errc:
-        print(f"Error Connecting for {ticker}: {errc}")
-    except requests.exceptions.Timeout as errt:
-        print(f"Timeout Error for {ticker}: {errt}")
     except requests.exceptions.RequestException as err:
-        print(f"Oops: Something Else for {ticker}: {err}")
-    return None  # Return None if there was an error
-
-# Loop through each ticker and plot the data
-# Initialize an empty DataFrame to collect all results
-all_tickers_df = pd.DataFrame()
-results_df = pd.DataFrame(columns=['Ticker', 'EarningsDate', 'SurpriseEPS', 'AverageStockPrice'])
-
-# Loop through each ticker and fetch, merge, and plot the data
-for ticker in tickers:
-    print(f"Fetching data for {ticker}...")
-    earnings_df = fetch_earnings_data(ticker, api_key)
-    
-    if earnings_df is not None and not earnings_df.empty:
-        print(f"Data fetched for {ticker}, merging with stock data...")
-        
-        stock_data = yf.Ticker(ticker).history(period="10y")
-        stock_data.reset_index(inplace=True)
-        stock_data['Date'] = stock_data['Date'].dt.tz_localize(None)
-
-        merged_df = pd.merge(stock_data, earnings_df, left_on='Date', right_on='date', how='inner')
-        all_tickers_df = pd.concat([all_tickers_df, merged_df], ignore_index=True)  # Collect data for all tickers
-        
-        for index, row in earnings_df.iterrows():
-            # ... same code as before ...
-            new_row = {
-                'Ticker': [ticker],
-                'EarningsDate': [row['date']],
-                'SurpriseEPS': [row['earnings_surprise']],
-                'AverageStockPrice': [stock_data.loc[stock_data['Date'] == row['date'], 'Close'].mean()]
-            }
-            new_row_df = pd.DataFrame(new_row)
-            results_df = pd.concat([results_df, new_row_df], ignore_index=True)
-
-        print(f"Merged data for {ticker}:")
-        print(merged_df.head())  # Print the first few rows to inspect
-        
-        # Set up the figure and axes
-        plt.figure(figsize=(14, 7))
-        ax1 = plt.gca()  # Get current axis for the stock price
-        ax2 = ax1.twinx()  # Create another axis for the earnings surprise
-
-        # Plot stock price data
-        sns.lineplot(data=merged_df, x='Date', y='Close', ax=ax1, color='blue', label=f'{ticker} Stock Price')
-
-        # Plot earnings surprise data
-        sns.lineplot(data=merged_df, x='Date', y='earnings_surprise', ax=ax2, color='red', label=f'{ticker} Earnings Surprise')
-
-        # Customize the plot
-        ax1.set_xlabel('Date', fontsize=14)
-        ax1.set_ylabel('Stock Price', fontsize=14, color='blue')
-        ax2.set_ylabel('Earnings Surprise', fontsize=14, color='red')
-        ax1.set_title(f'Stock Price and Earnings Surprise for {ticker}', fontsize=16)
-
-        # Format the date ticks and add grid, legend, and show the plot
-        plt.gcf().autofmt_xdate()  # Auto-format the date axis
-        ax1.grid(True)
-        ax1.legend(loc='upper left')
-        ax2.legend(loc='upper right')
-        plt.show()
-
-        # Pause between API calls to avoid hitting rate limit
-        time.sleep(1)  # Sleep for 1 second or as required by the API's rate limit policy
-
-print(results_df)
+        print(f"Error fetching data for {ticker}: {err}")
+        return pd.DataFrame()
 
 
-# ADF Test
+# === 3) Tests de stationnarité (ADF et KPSS) ===
 def adf_test(timeseries):
+    """
+    Effectue le test de Dickey-Fuller augmenté (ADF) et retourne un résumé sous forme de Series.
+    """
     dftest = adfuller(timeseries.dropna(), autolag='AIC')
-    dfoutput = pd.Series(dftest[0:4], index=['Test Statistic', 'p-value', '#Lags Used', 'Number of Observations Used'])
+    dfoutput = pd.Series(dftest[0:4], 
+                         index=['Test Statistic', 'p-value', 
+                                '#Lags Used', 'Number of Observations Used'])
     for key, value in dftest[4].items():
-        dfoutput['Critical Value (%s)' % key] = value
+        dfoutput[f'Critical Value ({key})'] = value
     return dfoutput
 
-# KPSS Test
 def kpss_test(timeseries):
+    """
+    Effectue le test de KPSS et retourne un résumé sous forme de Series.
+    """
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore')
         kpsstest = kpss(timeseries.dropna(), regression='c', nlags='auto')
-    kpss_output = pd.Series(kpsstest[0:3], index=['Test Statistic', 'p-value', 'Lags Used'])
+    kpss_output = pd.Series(kpsstest[0:3], 
+                            index=['Test Statistic', 'p-value', 'Lags Used'])
     for key, value in kpsstest[3].items():
-        kpss_output['Critical Value (%s)' % key] = value
+        kpss_output[f'Critical Value ({key})'] = value
     return kpss_output
 
-# DataFrames to store results
-adf_results = pd.DataFrame()
-kpss_results = pd.DataFrame()
 
-# Initialize a list to store results
-combined_results = []
+# === 4) Récupération et fusion de données (historique & earnings) pour chaque ticker ===
+all_tickers_df = pd.DataFrame()  # Collecte toutes les données des tickers
 
-
-
-# Loop through each ticker for modeling
 for ticker in tickers:
-    print(f"Processing {ticker}...")
-
-    # Fetch the earnings data for the current ticker
+    print(f"\n=== Fetching data for {ticker} ===")
+    # Récupération des earnings
     earnings_df = fetch_earnings_data(ticker, api_key)
     
-    # Check if earnings data is not empty
-    if earnings_df is not None and not earnings_df.empty:
-        # Get the stock data
-        stock_data = yf.Ticker(ticker).history(period="10y")
-        
-        # Reset the index if 'Date' is the index to make 'Date' a column
-        if stock_data.index.name == 'Date' or 'Date' not in stock_data.columns:
-            stock_data.reset_index(inplace=True)
-
-        # Ensure that 'Date' column is the same in both DataFrames
-        stock_data['Date'] = stock_data['Date'].dt.tz_localize(None)
-        earnings_df['date'] = earnings_df['date'].dt.tz_localize(None)
-
-        # Merge stock data with earnings data on the 'Date' column
-        merged_df = pd.merge(stock_data, earnings_df, left_on='Date', right_on='date', how='inner')
-
-        # The target variable is the stock price, and the exogenous variable is earnings surprise
-        y = merged_df['Close']
-        X = merged_df['earnings_surprise'].fillna(method='ffill').fillna(method='bfill')
-        
-        # Perform stationarity tests
-    print(f'Stationarity tests for {ticker}')
-    adf_result = adf_tes
-    kpss_result = kpss_test(y)
-
-    # Combine results into a single row and reset index
-    combined_row = pd.concat([adf_result, kpss_result])
-    combined_row.name = ticker
-    combined_row.reset_index(drop=True, inplace=True)  # Reset index here
-    combined_results.append(combined_row)
+    if earnings_df is None or earnings_df.empty:
+        print(f"No earnings data for {ticker}. Skipping.")
+        continue
     
-    # Convert the list of Series to a DataFrame
-    combined_results_df = pd.DataFrame(combined_results)
+    # Récupération des cours boursiers
+    stock_data = yf.Ticker(ticker).history(period="10y")
+    stock_data.reset_index(inplace=True)
+    stock_data['Date'] = pd.to_datetime(stock_data['Date']).dt.tz_localize(None)
     
-    # Display combined results in HTML format
-    print("Combined ADF and KPSS Test Results:")
-    print(combined_results_df.to_html())
-
-
-
-   
-       
-    # Check if there is any misisng values within x
-    print(X.isnull().sum())
-    # there is none
+    # Fusion sur la date exacte (ou inner join)
+    merged_df = pd.merge(
+        stock_data, 
+        earnings_df, 
+        left_on='Date', 
+        right_on='date', 
+        how='inner'
+    )
+    merged_df['symbol'] = ticker  # Pour distinguer le ticker dans all_tickers_df
     
-      # Fit the ARIMA model using auto_arima
-    arima_model = auto_arima(y, start_p=1, start_q=1, max_p=3, max_q=3, seasonal=False, 
-                             d=None, trace=True, error_action='ignore',  
-                             suppress_warnings=True, stepwise=True)
+    # Exemple : On affiche quelques lignes
+    print(merged_df.head(3))
     
-    # Generate in-sample predictions
-    arima_insample_predictions = arima_model.predict_in_sample()
-    
-    # Ensure predictions are aligned with actual stock prices (in-sample)
-    # This assumes y and arima_insample_predictions have the same index
-    plt.figure(figsize=(12, 6))
-    plt.plot(y.index, y, color='blue', label='Actual Stock Prices')
-    plt.plot(y.index, arima_insample_predictions, color='green', label='ARIMA In-sample Predictions')
-    plt.title(f'In-sample Predictions vs Actual Stock Prices for {ticker}')
-    plt.xlabel('Date')
-    plt.ylabel('Stock Price')
-    plt.legend()
-    plt.show()
-    
-    # Fit a SARIMAX model including surprise EPS
-    sarimax_model = SARIMAX(y, exog=X, order=arima_model.order,
-                            enforce_stationarity=False, enforce_invertibility=False)
-    sarimax_results = sarimax_model.fit(disp=False)
-    
-    # Generate in-sample predictions from the ARIMA model
-    arima_insample_predictions = arima_model.predict_in_sample()
-    
-    
-    # SARIMAX predictions including the exogenous variable
-    sarimax_predictions = sarimax_results.get_prediction(exog=X).predicted_mean
-    
-    # Plot actual vs predicted stock prices
-    plt.figure(figsize=(12, 6))
-    plt.plot(y.index, y, color='blue', label='Actual Stock Prices')
-    plt.plot(y.index, sarimax_predictions, color='red', label='SARIMAX Predictions')
-    plt.title(f'Stock Prices and Predictions for {ticker}')
-    plt.xlabel('Date')
-    plt.ylabel('Stock Price')
-    plt.legend()
-    plt.show()
-    # No need to plot ARIMA because it is a random walk
-     
-    # Print the summary of the SARIMAX model for the current ticker
-    print(f'ARIMAX model summary for {ticker}:')
-    print(sarimax_results.summary())
-    
-    # Plotting and diagnostics for ARIMA/SARIMAX model
-    arima_residuals = arima_model.resid()
-    sarimax_residuals = sarimax_results.resid.values  
-     
-    # Plot the residuals of the ARIMA model using KDE for a smooth curve
-    fig, ax = plt.subplots(1,2, figsize=(16, 4))
-    sns.kdeplot(arima_residuals, ax=ax[1], fill=True)  # Fill under the density curve
-    ax[0].plot(arima_residuals)
-    ax[0].set_title(f'{ticker} ARIMA Model Residuals')
-    ax[1].set_title(f'{ticker} ARIMA Residuals Density')
-    plt.show()
-     
-    # Plot the residuals of the SARIMAX model using KDE for a smooth curve
-    fig, ax = plt.subplots(1,2, figsize=(16, 4))
-    sns.kdeplot(sarimax_residuals, ax=ax[1], fill=True)  # Fill under the density curve
-    ax[0].plot(sarimax_residuals)
-    ax[0].set_title(f'{ticker} SARIMAX Model Residuals')
-    ax[1].set_title(f'{ticker} SARIMAX Residuals Density')
-    plt.show() 
-    
-    # Define the maximum number of lags for the ACF plot based on your analysis
-    max_lags_acf = int(np.ceil(17.5))  # for example
-    
-    # ACF plot for ARIMA residuals with a specified number of lags
-    plot_acf(arima_residuals, alpha=0.05, lags=max_lags_acf, title=f'{ticker} ARIMA Residuals ACF')
-    plt.show()
-    
-    # ACF plot for SARIMAX residuals with a specified number of lags
-    plot_acf(sarimax_residuals, alpha=0.05, lags=max_lags_acf, title=f'{ticker} SARIMAX Residuals ACF')
-    plt.show()
-    
-    # Conduct and display Durbin-Watson test for ARIMA and SARIMAX model residuals
-    print(f'Durbin-Watson statistic for {ticker} ARIMA residuals: {durbin_watson(arima_residuals)}')
-    print(f'Durbin-Watson statistic for {ticker} SARIMAX residuals: {durbin_watson(sarimax_residuals)}')
-    
-    # Conduct and display Shapiro-Wilk test for ARIMA and SARIMAX model residuals
-    print(f'Shapiro-Wilk test for {ticker} ARIMA residuals: statistic={shapiro(arima_residuals)[0]}, p-value={shapiro(arima_residuals)[1]}')
-    print(f'Shapiro-Wilk test for {ticker} SARIMAX residuals: statistic={shapiro(sarimax_residuals)[0]}, p-value={shapiro(sarimax_residuals)[1]}')
-    
-    # Perform Ljung-Box test on ARIMA residuals
-    ljung_result_arima = acorr_ljungbox(arima_residuals, lags=[10], return_df=True)
-    print(f'Ljung-Box test for {ticker} ARIMA residuals:\n{ljung_result_arima}\n')
-    
-    # Perform Ljung-Box test on SARIMAX residuals
-    ljung_result_sarimax = acorr_ljungbox(sarimax_residuals, lags=[10], return_df=True)
-    print(f'Ljung-Box test for {ticker} SARIMAX residuals:\n{ljung_result_sarimax}\n')
+    # Concatène les données
+    all_tickers_df = pd.concat([all_tickers_df, merged_df], ignore_index=True)
 
 
-"""
-ALL stocks give an ARIMA score of(0,1,0) implying no AR or MA 
-Is a random walk, respecting efficient market hypothesis that information drive
-prices variations.
-Past prices don't haver any predictive power
-But if that's the case, then human investment decision is driven by information
-And so, information is processed by the human brain which then react to said event
-So the human reaction to surprise EPS is the main driver underlying stock prices
-For more details, refer to =>>>>> Fama's random walk
-
-In that case, human sentiment shape the variations within prices given that 
-an investor will feel certain sentiments correlated to its beliefs/biases/prediction
-which ultimately re-shape the prices
-This is proven by the constant evidences of lags in the ARIMA model, some of them 
-are not white noises 
-The SARIMAX model futher insists on more pronunced varying degree of lags, 
-especially on the above 7.5
-So surprise EPS correcly explains the variations on prices in the long-run
-
-Now, let's re-run the model within a 10 days windows to better catch the 
-effect of surprise earning on the immediate investor's reaction that follows 
-the 10-Q earnings realease"""
-
-
-
-# Filter the earnings_df for dates between 2014 and end of 2023
-merged_df = merged_df[(merged_df['date'] >= pd.Timestamp('2014-01-01')) & 
-                          (merged_df['date'] <= pd.Timestamp('2023-12-31'))]
-
-# Ensure that the stock_data index is a DatetimeIndex
-if not isinstance(stock_data.index, pd.DatetimeIndex):
-    stock_data['Date'] = pd.to_datetime(stock_data['Date'])  # Convert 'Date' to datetime if not already
-    stock_data.set_index('Date', inplace=True)  # Set 'Date' as the index
-
-# Ensure that the merged_df 'date' column is a DatetimeIndex
-merged_df['date'] = pd.to_datetime(merged_df['date'])  # Convert 'date' to datetime
-
-# Define the window size and create an empty list for short-term windows
-window_size = 10
-short_term_windows = []
-
-# Check if merged_df is not empty and proceed with window creation
-if not merged_df.empty:
-    for date in merged_df['date']:
-        window_start = date - pd.Timedelta(days=window_size)
-        window_end = date + pd.Timedelta(days=window_size)
-        mask = (stock_data.index >= window_start) & (stock_data.index <= window_end)
-        window_df = stock_data.loc[mask].copy()
-
-        if not window_df.empty:
-            earnings_surprise = merged_df.loc[merged_df['date'] == date, 'earnings_surprise'].iloc[0]
-            window_df['earnings_surprise'] = earnings_surprise
-            short_term_windows.append(window_df)
-
-# Concatenate all the windows and handle the index properly
-if short_term_windows:
-    short_term_df = pd.concat(short_term_windows)
-    short_term_df.reset_index(inplace=True)  # 'Date' becomes a column
-    short_term_df.rename(columns={'index': 'Date'}, inplace=True)
-    short_term_df.set_index('Date', inplace=True)  # Set 'Date' as the index again if required
-    
-    
-
-def calculate_average_stock_price_around_earnings(merged_df, stock_data):
-    """
-    Calculates the average stock price around the earnings release date for each ticker.
-
-    Parameters:
-    merged_df (DataFrame): DataFrame containing earnings data with 'date' and 'earnings_surprise' columns.
-    stock_data (DataFrame): DataFrame containing stock price data with 'Date' and 'Close' columns.
-
-    Returns:
-    DataFrame: A DataFrame with the average stock price for each earnings date and the corresponding earnings surprise.
-    """
-
-# Initialize the list to hold all short-term windows for all tickers
-all_short_term_frames = []
-
-# Initialize a DataFrame to hold all results
-all_results = pd.DataFrame(columns=['Ticker', 'EarningsDate', 'SurpriseEPS', 'AverageStockPrice'])
-
-# Assuming 'short_run_df' and 'tickers' are defined earlier in your code
-# and all necessary libraries and functions like 'adf_test', 'kpss_test', 'ndiffs', 'auto_arima', etc., are already imported
-
-window_size = 10
-
-# Loop over each ticker
+# === 5) Visualisation de base (Prix vs Earnings Surprise) ===
 for ticker in tickers:
-    print(f"Processing {ticker}...")
-
-    # Fetch the earnings data for the current ticker
-    merged_df = fetch_earnings_data(ticker, api_key)
+    subset = all_tickers_df[all_tickers_df['symbol'] == ticker]
+    if subset.empty:
+        continue
     
-    if merged_df is not None and not merged_df.empty:
-        # Get the stock data
-        stock_data = yf.Ticker(ticker).history(period="10y")
-        
-        # Prepare the stock_data DataFrame
-          # Step 1: Reset index to make 'Date' a column
-        stock_data.reset_index(inplace=True)
-        
-        # Step 2: Calculate the day difference on the 'Date' column
-        stock_data['Day_Diff'] = stock_data['Date'].diff().dt.days
-        
-        # Step 3: Convert the 'Date' column to timezone-naive type, if necessary
-        stock_data['Date'] = pd.to_datetime(stock_data['Date']).dt.tz_localize(None)
-        
-        # Step 4: (Optional) Set 'Date' back as the index, if you need to
-        stock_data.set_index('Date', inplace=True)
+    plt.figure(figsize=(14, 7))
+    ax1 = plt.gca()
+    ax2 = ax1.twinx()
 
-        # Prepare the merged_df DataFrame
-        merged_df['date'] = pd.to_datetime(merged_df['date']).dt.tz_localize(None)
-        
+    sns.lineplot(data=subset, x='Date', y='Close', ax=ax1, color='blue', label=f'{ticker} Price')
+    sns.lineplot(data=subset, x='Date', y='earnings_surprise', ax=ax2, color='red', label='Earnings Surprise')
 
-        # Initialize the list to hold short-term windows for the current ticker
-        short_run_frames = []
+    ax1.set_xlabel('Date', fontsize=12)
+    ax1.set_ylabel('Stock Price', fontsize=12, color='blue')
+    ax2.set_ylabel('Earnings Surprise', fontsize=12, color='red')
+    ax1.set_title(f'Stock Price & Earnings Surprise - {ticker}', fontsize=14)
+    ax1.legend(loc='upper left')
+    ax2.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
 
-        # Loop through each earnings date to create the short-term window
-        for earnings_date in merged_df['date'].unique():
-            window_start = earnings_date - pd.Timedelta(days=window_size)
-            window_end = earnings_date + pd.Timedelta(days=window_size)
-
-            # Check if the window start and end are within the stock data date range
-            if window_start in stock_data.index and window_end in stock_data.index:
-                # Slice the window frame from the stock_data
-                window_frame = stock_data.loc[window_start:window_end].copy()
-                
-                window_frame['earnings_surprise'] = merged_df.loc[merged_df['date'] == earnings_date, 'earnings_surprise'].iloc[0]
-                
-                
-                # Append the window frame to the list for the current ticker
-                short_run_frames.append(window_frame)
-                
-        # After processing all earnings dates for the ticker
-        if short_run_frames:
-            
-            # Concatenate all window frames
-            short_run_df = pd.concat(short_run_frames)
-        
-            # Check if 'Date' is a column and set it as the index
-            if 'Date' in short_run_df.columns:
-                short_run_df.set_index('Date', inplace=True)
-            else:
-                # If 'Date' is not a column, reset the index and rename it to 'Date'
-                short_run_df.reset_index(inplace=True)
-                short_run_df.rename(columns={'index': 'Date'}, inplace=True)
-                short_run_df.set_index('Date', inplace=True)
-        
-            # The target variable is the stock price
-            y_short_run = short_run_df['Close']
-            
-            # Check stationarity
-            print(f'Stationarity tests for {ticker} in short-run window')
-            adf_test(y_short_run)
-            kpss_test(y_short_run)
-        
-            # Determine the order of differencing (d) using ndiffs
-            d = ndiffs(y_short_run, test='adf')
-        
-            
-            # Fit the SARIMAX model
-            sarimax_model = auto_arima(y_short_run, start_p=1, start_q=1,
-                                       max_p=3, max_q=3, seasonal=False,
-                                       d=2, trace=True, error_action='ignore',
-                                       suppress_warnings=True, stepwise=True)
-        
-            # Generate in-sample predictions
-            in_sample_preds = sarimax_model.predict_in_sample()
-        
-            # Align predictions with the dates in short_run_df
-            in_sample_preds_indexed = pd.Series(in_sample_preds, index=short_run_df.index)
-        
-            # Plot setup
-            fig, ax = plt.subplots(figsize=(15, 7))
-        
-            # Plot actual stock prices
-            ax.plot(short_run_df.index, short_run_df['Close'], color='blue', label='Actual Stock Prices')
-        
-            # Plot predicted stock prices
-            ax.plot(short_run_df.index, in_sample_preds_indexed, color='red', linestyle='--', label='Predicted Stock Prices')
-        
-            # Title and labels
-            ax.set_title(f'Short-Run Stock Prices and Predictions for {ticker}')
-            ax.set_xlabel('Date')
-            ax.set_ylabel('Stock Price')
-        
-            # Date format
-            ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-        
-            # Rotate date labels for better readability
-            plt.xticks(rotation=45)
-        
-            # Show legend
-            ax.legend()
-        
-            # Display plot
-            plt.show()
-            
-            # Print the summary of the SARIMAX model for the current ticker
-            print(sarimax_model.summary())
-                  
-            # Model diagnostics for the short-run model
-            sarimax_model.plot_diagnostics(figsize=(15, 12))
-            plt.show()
-            
-            # Conduct and display Durbin-Watson test for model residuals
-            residuals = sarimax_model.resid()
-            print(f'Durbin-Watson statistic for {ticker}: {durbin_watson(residuals)}')
-            
-            # Conduct and display Shapiro-Wilk test for model residuals
-            print(f'Shapiro-Wilk test for {ticker} residuals: {shapiro(residuals)}')
-            
-            # Perform Ljung-Box test on residuals
-            ljung_box_results = acorr_ljungbox(residuals, lags=[10], return_df=True)
-            print(f'Ljung-Box test for {ticker} residuals:\n{ljung_box_results}\n')
+    time.sleep(1)
 
 
-"""""
-Now let's move on to sentiment analysis
-    """""
+# === 6) Tests de stationnarité & ARIMA / SARIMAX pour chaque ticker ===
+
+def run_sarimax_for_ticker(ticker, df):
+    """
+    Pour un ticker donné, on fit un modèle SARIMAX avec la variable endogène = 'Close'
+    et la variable exogène = 'earnings_surprise'. 
+    """
+
+    # Filtre les données du ticker
+    subset = df[df['symbol'] == ticker].copy()
+    if subset.empty:
+        print(f"No data for {ticker}.")
+        return
+
+    # Variable cible et exogène
+    y = subset['Close']
+    X = subset['earnings_surprise'].fillna(method='ffill').fillna(method='bfill')
+    
+    print(f"\n=== Stationarity tests for {ticker} ===")
+    # Test ADF
+    adf_res = adf_test(y)
+    print("ADF Test:\n", adf_res)
+    # Test KPSS
+    kpss_res = kpss_test(y)
+    print("KPSS Test:\n", kpss_res)
+
+    # On détermine l’ordre (p, d, q) via auto_arima
+    arima_model = auto_arima(
+        y, start_p=1, start_q=1, max_p=3, max_q=3,
+        seasonal=False, d=None, trace=False,
+        error_action='ignore', suppress_warnings=True, stepwise=True
+    )
+    print(f"auto_arima suggests order: {arima_model.order}")
+    
+    # Fit final SARIMAX avec exogène
+    sarimax_model = SARIMAX(y, exog=X, order=arima_model.order,
+                            enforce_stationarity=False, 
+                            enforce_invertibility=False)
+    sarimax_results = sarimax_model.fit(disp=False)
+    print(f"\n=== SARIMAX summary for {ticker} ===")
+    print(sarimax_results.summary())
+
+    # In-sample predictions
+    sarimax_predictions = sarimax_results.get_prediction(exog=X).predicted_mean
+
+    # Plot
+    plt.figure(figsize=(12, 6))
+    plt.plot(subset['Date'], y, color='blue', label='Actual')
+    plt.plot(subset['Date'], sarimax_predictions, color='red', label='Predicted')
+    plt.title(f'SARIMAX In-sample Predictions - {ticker}')
+    plt.xlabel('Date')
+    plt.ylabel('Stock Price')
+    plt.legend()
+    plt.show()
+
+    # Diagnostics : Résidus, tests, ACF
+    residuals = sarimax_results.resid
+    fig, ax = plt.subplots(1,2, figsize=(16, 4))
+    ax[0].plot(residuals)
+    ax[0].set_title('SARIMAX Residuals')
+    sns.kdeplot(residuals, fill=True, ax=ax[1])
+    ax[1].set_title('SARIMAX Residual Density')
+    plt.show()
+
+    # Durbin-Watson
+    print(f"Durbin-Watson (SARIMAX residuals) = {durbin_watson(residuals)}")
+    # Shapiro-Wilk
+    stat, p_value = shapiro(residuals)
+    print(f"Shapiro-Wilk (SARIMAX residuals): stat={stat}, p-value={p_value}")
+    # Ljung-Box
+    ljung_box_results = acorr_ljungbox(residuals, lags=[10], return_df=True)
+    print("Ljung-Box test:\n", ljung_box_results)
+
+
+print("\n=== Running SARIMAX for each ticker ===")
+for ticker in tickers:
+    run_sarimax_for_ticker(ticker, all_tickers_df)
+
+
+# === 7) Exemple d'approche "short-run window" (10 jours avant/après earnings) ===
+def build_short_run_df(df, ticker, window_size=10):
+    """
+    Construit un DataFrame pour chaque fenêtre de 10 jours autour des dates d'earnings.
+    """
+    subset = df[df['symbol'] == ticker].copy()
+    if subset.empty:
+        return pd.DataFrame()
+    
+    # On convertit Date en index pour slicing
+    subset.set_index('Date', inplace=True)
+    
+    short_windows = []
+    for d in subset['date'].unique():
+        d_start = d - pd.Timedelta(days=window_size)
+        d_end = d + pd.Timedelta(days=window_size)
+        mask = (subset.index >= d_start) & (subset.index <= d_end)
+        wdf = subset.loc[mask].copy()
+        
+        if not wdf.empty:
+            # On ajoute l'earnings_surprise commun
+            surprise_val = subset.loc[subset['date'] == d, 'earnings_surprise'].iloc[0]
+            wdf['earnings_surprise'] = surprise_val
+            short_windows.append(wdf)
+            
+    if short_windows:
+        out = pd.concat(short_windows)
+        out.reset_index(inplace=True)
+        return out
+    else:
+        return pd.DataFrame()
+
+
+for ticker in tickers:
+    short_run_data = build_short_run_df(all_tickers_df, ticker, window_size=10)
+    if short_run_data.empty:
+        print(f"No short-run window for {ticker}.")
+        continue
+    
+    # On tente un petit ARIMA ou SARIMAX sur ce short-run
+    y_short = short_run_data['Close']
+    X_short = short_run_data[['earnings_surprise']].copy().fillna(0)
+    
+    # auto_arima sur la période short-run
+    arima_model = auto_arima(
+        y_short, exogenous=X_short, 
+        start_p=1, start_q=1, max_p=3, max_q=3,
+        seasonal=False, d=0, 
+        trace=False, error_action='ignore', stepwise=True
+    )
+    print(f"\nShort-run window for {ticker}, auto_arima order: {arima_model.order}")
+    
+    # Fit statsmodels SARIMAX
+    short_sarimax = SARIMAX(y_short, exog=X_short, order=arima_model.order,
+                            enforce_stationarity=False, 
+                            enforce_invertibility=False).fit(disp=False)
+    print(short_sarimax.summary())
+
+    # Plot
+    preds_short = short_sarimax.get_prediction(exog=X_short).predicted_mean
+    
+    plt.figure(figsize=(12,6))
+    plt.plot(short_run_data['Date'], y_short, label='Actual', color='blue')
+    plt.plot(short_run_data['Date'], preds_short, label='Predicted', color='red')
+    plt.title(f'{ticker} - Short-run SARIMAX (±10 jours autour earnings)')
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.show()
+
+# === 8) Démonstration d'analyse de sentiment via FinBERT & merging ===
+
+print("\n=== Sentiment Analysis (FinBERT) ===")
+
+# 8.1 Prépare le pipeline FinBERT
+finbert_model = BertForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone", num_labels=3)
+finbert_tokenizer = BertTokenizer.from_pretrained("yiyanghkust/finbert-tone")
+nlp = pipeline("sentiment-analysis", model=finbert_model, tokenizer=finbert_tokenizer)
+
+label_weights = {'Neutral': 0, 'Positive': 1, 'Negative': -1}
+
+def process_text_in_chunks(text, max_chunk_length=512):
+    """
+    Découpe le texte en chunks <= 512 tokens pour éviter les dépassements de longueur.
+    """
+    tokenized_text = finbert_tokenizer.encode(text, add_special_tokens=False)
+    chunks = [tokenized_text[i:i + max_chunk_length] for i in range(0, len(tokenized_text), max_chunk_length)]
+    results = []
+    for chunk in chunks:
+        chunk_with_special = [finbert_tokenizer.cls_token_id] + chunk + [finbert_tokenizer.sep_token_id]
+        if len(chunk_with_special) > 512:
+            continue
+        chunk_text = finbert_tokenizer.decode(chunk_with_special, skip_special_tokens=True)
+        result = nlp(chunk_text)
+        results.append(result)
+    return results
+
+def calculate_sentiment_score(texts):
+    """
+    Calcule un score de sentiment moyen en utilisant des poids:
+    Positive -> +1, Negative -> -1, Neutral -> 0.
+    """
+    all_weighted_scores = []
+    for txt in texts:
+        chunk_results = process_text_in_chunks(txt)
+        flat_results = [res for sublist in chunk_results for res in sublist]
+        weighted_scores = [label_weights[r['label']] * r['score'] for r in flat_results]
+        if weighted_scores:
+            avg_score = sum(weighted_scores) / len(weighted_scores)
+            all_weighted_scores.append(avg_score)
+    if all_weighted_scores:
+        return sum(all_weighted_scores) / len(all_weighted_scores)
+    else:
+        return 0
 
 # Define quarters
 symbol_quarters =  {
@@ -644,347 +461,35 @@ symbol_quarters =  {
     "General Electric third quarter 2014 results", "General Electric second quarter 2014 results", 
     "General Electric first quarter 2014 results"
     ]
-
 }
 
-
-def process_text_in_chunks(text, max_chunk_length=512):
-    tokenizer = BertTokenizer.from_pretrained('yiyanghkust/finbert-tone')
-
-    # Tokenize the text without adding special tokens
-    tokenized_text = tokenizer.encode(text, add_special_tokens=False)
-    
-    # Split the text into chunks
-    chunks = [tokenized_text[i:i + max_chunk_length] for i in range(0, len(tokenized_text), max_chunk_length)]
-
-    results = []
-    for chunk in chunks:
-        # Add special tokens (CLS and SEP) to each chunk
-        chunk_with_special_tokens = [tokenizer.cls_token_id] + chunk + [tokenizer.sep_token_id]
-        # Ensure the chunk size is within the limit
-        if len(chunk_with_special_tokens) > 512:
-            continue  # or handle this situation appropriately
-
-        # Convert chunk back to string
-        chunk_text = tokenizer.decode(chunk_with_special_tokens, skip_special_tokens=True)
-
-        # Process with FinBERT
-        result = nlp(chunk_text)
-        results.append(result)
-    
-    return results
-
-# Initialize FinBERT model and tokenizer
-finbert = BertForSequenceClassification.from_pretrained('yiyanghkust/finbert-tone', num_labels=3)
-tokenizer = BertTokenizer.from_pretrained('yiyanghkust/finbert-tone')
-nlp = pipeline("sentiment-analysis", model=finbert, tokenizer=tokenizer)
-
-# Function to calculate sentiment score
-def calculate_sentiment_score(text_data):
-    all_weighted_scores = []
-    for text in text_data:
-        chunk_results = process_text_in_chunks(text)
-        flat_results = [item for sublist in chunk_results for item in sublist]
-        weighted_scores = [label_weights[item['label']] * item['score'] for item in flat_results]
-        if weighted_scores:
-            average_weighted_score = sum(weighted_scores) / len(weighted_scores)
-            all_weighted_scores.append(average_weighted_score)
-    return sum(all_weighted_scores) / len(all_weighted_scores) if all_weighted_scores else 0
-
-label_weights = {'Neutral': 0, 'Positive': 1, 'Negative': -1}
 symbol_quarter_sentiment_scores = {}
-
-# Process each symbol and quarter separately
-for symbol, quarters in symbol_quarters.items():
+for symbol, queries in symbol_quarters.items():
     symbol_quarter_sentiment_scores[symbol] = {}
-    for quarter in quarters:
-        quarter_data = write_crawl_results([quarter], 10)
-        texts = quarter_data['body'].tolist()  # Extract texts
+    for query in queries:
+        # On appelle une fonction hypothétique de crawling
+        df_crawl = write_crawl_results([query], n=10)  # suppose que cette fonction retourne un df avec colonnes ['body']
+        texts = df_crawl['body'].tolist()
 
-        # Diagnostic print: Check a few texts
-        print(f"Sample texts for {symbol} {quarter}: {texts[:2]}")
-
-        time.sleep(10)
-        for text in texts:
-            # Check if text is empty or too short
-            if not text or len(text.split()) < 5:
-                print(f"Text too short or empty: {text}")
-                continue
-
-            # Detailed sentiment analysis for each text
-            chunk_results = process_text_in_chunks(text)
-            for result in chunk_results:
-                print(f"Detailed sentiment analysis result for a chunk: {result}")
-
-            # Calculate individual sentiment scores
-            individual_score = calculate_sentiment_score([text])
-            print(f"Individual sentiment score for a text: {individual_score}")
-
-        # Calculate and store the score for the quarter
+        # On calcule un score moyen
         score = calculate_sentiment_score(texts)
-        symbol_quarter_sentiment_scores[symbol][quarter] = score
-
-# Now symbol_quarter_sentiment_scores contains the sentiment score for each quarter of each symbol
-for symbol, quarters_scores in symbol_quarter_sentiment_scores.items():
-    for quarter, score in quarters_scores.items():
-        print(f"{symbol} {quarter} sentiment score: {score}")
-
-        
-"""
-Now that we got results, we can combine them within the 10-days window SARIMAX
-First, we combine the sentiment analysis to earnning df based on index
-then we run the regression for each compagny using sentiments
-Most important, we combine all the regression into a single one SARIMAX 
-to establish the overall effect of sentiments on the renewable markets
-Limits and discussion: next steps (more advanced models)
-""" 
+        symbol_quarter_sentiment_scores[symbol][query] = score
+        print(f"{symbol} / '{query}' => Sentiment Score: {score}")
 
 
-# Convert the nested dictionary to a DataFrame
-sentiment_df = pd.DataFrame.from_dict(symbol_quarter_sentiment_scores, orient='index').stack().reset_index()
-sentiment_df.columns = ['symbol', 'quarter', 'sentiment_score']
+# 8.2 Convertit ces scores en DataFrame pour potentielle fusion
+sentiment_rows = []
+for sym, qdict in symbol_quarter_sentiment_scores.items():
+    for q, sc in qdict.items():
+        sentiment_rows.append((sym, q, sc))
 
-def map_date_to_quarter(date):
-    year = date.year
-    if 1 <= date.month <= 3:  # Earnings of Q4 of the previous year released in Q1
-        quarter = "Q4"
-        year -= 1  # Adjust to previous year for Q4
-    elif 4 <= date.month <= 6:  # Earnings of Q1 released in Q2
-        quarter = "Q1"
-    elif 7 <= date.month <= 9:  # Earnings of Q2 released in Q3
-        quarter = "Q2"
-    else:  # Earnings of Q3 released in Q4
-        quarter = "Q3"
-    return f"{year} {quarter}"
+sentiment_df = pd.DataFrame(sentiment_rows, columns=['symbol', 'quarter_query', 'sentiment_score'])
+print("\n=== Sentiment DataFrame ===")
+print(sentiment_df.head())
 
+# 8.3 Exemple de merge avec all_tickers_df (il faudrait disposer d'une clé "quarter" ou "quarter_query")
+# Dans l'exemple suivant, on suppose juste qu'on a 'symbol' et 'quarter_query'. L’utilisateur doit adapter.
+# final_merged_df = pd.merge(all_tickers_df, sentiment_df, on=['symbol'], how='left')
+# => Adapter la logique de correspondance ticker / quarter.
 
-# Add a 'quarter' column to merged_df
-all_tickers_df['quarter'] = all_tickers_df['date'].apply(map_date_to_quarter)
-
-# Convert symbol_quarter_sentiment_scores to a DataFrame
-sentiment_df = pd.DataFrame([(symbol, quarter, score) for symbol, quarters in symbol_quarter_sentiment_scores.items() for quarter, score in quarters.items()], columns=['symbol', 'quarter', 'sentiment_score'])
-
-# Merge the DataFrames
-final_df = pd.merge(all_tickers_df, sentiment_df, on=['symbol', 'quarter'], how='left')
-
-def quarter_to_date_range(symbol, quarter):
-    # Example function to convert a quarter to a date range
-    # Modify this function according to your specific quarter definitions and data
-    year = int(quarter[-4:])
-    if 'Q1' in quarter:
-        return pd.date_range(start=f"{2014}-05-06", end=f"{year}-03-31")
-    elif 'Q2' in quarter:
-        return pd.date_range(start=f"{year}-04-01", end=f"{year}-06-30")
-    elif 'Q3' in quarter:
-        return pd.date_range(start=f"{year}-07-01", end=f"{year}-09-30")
-    elif 'Q4' in quarter:
-        return pd.date_range(start=f"{year}-10-01", end=f"{year}-12-31")
-
-# Ensure that the 'date' and 'symbol' columns are in the correct format
-sentiment_df['date'] = pd.to_datetime(sentiment_df['date'])
-final_df['date'] = pd.to_datetime(final_df['date'])
-
-
-
-"""
-Let's go for the regression now
-"""
-
-window_size = 10
-
-for ticker in tickers:
-    print(f"Processing {ticker}...")
-
-    # Get the stock data
-    stock_data = yf.Ticker(ticker).history(period="10y")
-    stock_data.reset_index(inplace=True)
-    stock_data['Date'] = pd.to_datetime(stock_data['Date']).dt.tz_localize(None)
-    stock_data.set_index('Date', inplace=True)
-
-    # Filter final_df for the current ticker and prepare exogenous variables
-    ticker_final_df = final_df[final_df['symbol'] == ticker]
-    ticker_final_df['date'] = pd.to_datetime(ticker_final_df['date'])
-
-    short_run_frames = []
-
-    for earnings_date in ticker_final_df['date'].unique():
-        window_start = earnings_date - pd.Timedelta(days=window_size)
-        window_end = earnings_date + pd.Timedelta(days=window_size)
-
-        if window_start in stock_data.index and window_end in stock_data.index:
-            window_frame = stock_data.loc[window_start:window_end].copy()
-            window_frame['earnings_surprise'] = ticker_final_df.loc[ticker_final_df['date'] == earnings_date, 'earnings_surprise'].iloc[0]
-            window_frame['sentiment_score'] = ticker_final_df.loc[ticker_final_df['date'] == earnings_date, 'sentiment_score'].iloc[0]
-            short_run_frames.append(window_frame)
-
-    if short_run_frames:
-        short_run_df = pd.concat(short_run_frames)
-        if 'Date' in short_run_df.columns:
-            short_run_df.set_index('Date', inplace=True)
-
-        y_short_run = short_run_df['Close']
-        X_short_run = short_run_df[['earnings_surprise', 'sentiment_score']]
-
-        # Fit the SARIMAX model using statsmodels
-        model = sm.tsa.SARIMAX(y_short_run, exog=X_short_run, order=(0, 2, 1))
-        results = model.fit(disp=False)
-
-        # Print the summary
-        print(results.summary())
-
-        # Plot diagnostics
-        results.plot_diagnostics(figsize=(15, 12))
-        plt.show()
-
-        # Generate in-sample predictions and align with dates
-        in_sample_preds = results.get_prediction(start=y_short_run.index[0], end=y_short_run.index[-1]).predicted_mean
-
-        # Plot actual vs. predicted stock prices
-        fig, ax = plt.subplots(figsize=(15, 7))
-        ax.plot(y_short_run.index, y_short_run, color='blue', label='Actual Stock Prices')
-        ax.plot(in_sample_preds.index, in_sample_preds, color='red', linestyle='--', label='Predicted Stock Prices')
-        ax.set_title(f'Short-Run Stock Prices and Predictions for {ticker}')
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Stock Price')
-        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-        plt.xticks(rotation=45)
-        ax.legend()
-        plt.show()
-        
-        
-"""
-Let's prepare for the final regression, which will combines the 
-SARIMAX models of the five compagnies into a single one that will be representative
-of the renewable market overall
-"""
-
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-
-
-
-# Define a function to apply rolling window within each group
-def apply_rolling(group):
-    group['earnings_surprise'] = group['earnings_surprise'].rolling(window=window_size).mean()
-    group['sentiment_score'] = group['sentiment_score'].rolling(window=window_size).mean()
-    return group
-
-window_size = 10
-
-
-# Define target variable (stock price) and exogenous variables
-y = final_df['Close']
-X = final_df[['earnings_surprise', 'sentiment_score']]
-
- # Determine the order of differencing (d) using ndiffs
-d = ndiffs(y_short_run, test='adf')
-
- 
- # Fit the SARIMAX model
-sarimax_model = auto_arima(y_short_run, start_p=1, start_q=1,
-                            max_p=3, max_q=3, seasonal=False,
-                            d=2, trace=True, error_action='ignore',
-                            suppress_warnings=True, stepwise=True)
-
- # Generate in-sample predictions
-in_sample_preds = sarimax_model.predict_in_sample()
-
- # Align predictions with the dates in short_run_df
-in_sample_preds_indexed = pd.Series(in_sample_preds, index=short_run_df.index)
-
-# Print the summary
-
-print(results.summary())
-
-# Model Diagnostics
-results.plot_diagnostics(figsize=(15, 12))
-plt.show()
-
-# In-sample prediction and plotting
-in_sample_preds = results.predict(start=0, end=len(final_df)-1, dynamic=False, exog=X)
-fig, ax = plt.subplots(figsize=(15, 7))
-ax.plot(final_df['date'], y, label='Observed')
-ax.plot(final_df['date'], in_sample_preds, label='Predicted', alpha=0.7)
-ax.set_title('Stock Price Prediction')
-ax.set_xlabel('Date')
-ax.set_ylabel('Stock Price')
-plt.legend()
-plt.show()
-
-# Scatter plot to visualize the relationship
-plt.figure(figsize=(10, 6))
-sns.scatterplot(x='sentiment_score', y='Close', data=final_df)
-plt.title('Relationship between Sentiment Score and Stock Price')
-plt.xlabel('Sentiment Score')
-plt.ylabel('Stock Price')
-plt.show()
-
-# Correlation analysis
-correlation = final_df['sentiment_score'].corr(final_df['Close'])
-print(f"Correlation between sentiment score and stock price: {correlation}")
-
-# ACF and PACF plots
-fig, axes = plt.subplots(1, 2, figsize=(15, 4))
-plot_acf(final_df['sentiment_score'], ax=axes[0])
-plot_pacf(final_df['sentiment_score'], ax=axes[1])
-plt.show()
-
-# Define the split date for pre-pandemic and during/post-pandemic
-split_date = pd.Timestamp('2020-02-01')
-
-# Splitting the DataFrame
-pre_pandemic_df = final_df[final_df['date'] < split_date]
-post_pandemic_df = final_df[final_df['date'] >= split_date]
-
-# Define a function to fit SARIMAX model and plot results
-def fit_sarimax_and_plot(dataframe, segment_name):
-    y = dataframe['Close']
-    X = dataframe[['earnings_surprise', 'sentiment_score']]
-
-    # Fit SARIMAX Model
-    model = sm.tsa.SARIMAX(y, exog=X, order=(0, 2, 1), enforce_stationarity=False, enforce_invertibility=False)
-    results = model.fit(disp=False)
-
-    # Print the summary
-    print(f"SARIMAX Results for {segment_name} Segment:")
-    print(results.summary())
-
-    # Model Diagnostics
-    results.plot_diagnostics(figsize=(15, 12))
-    plt.show()
-
-    # Optional: In-sample prediction and plotting
-    in_sample_preds = results.predict(start=0, end=len(dataframe)-1, dynamic=False, exog=X)
-    fig, ax = plt.subplots(figsize=(15, 7))
-    ax.plot(dataframe['date'], y, label='Observed')
-    ax.plot(dataframe['date'], in_sample_preds, label='Predicted', alpha=0.7)
-    ax.set_title(f'Stock Price Prediction - {segment_name}')
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Stock Price')
-    plt.legend()
-    plt.show()
-    
-    # Scatter plot to visualize the relationship
-    plt.figure(figsize=(10, 6))
-    sns.scatterplot(x='sentiment_score', y='Close', data=dataframe)
-    plt.title('Relationship between Sentiment Score and Stock Price')
-    plt.xlabel('Sentiment Score')
-    plt.ylabel('Stock Price')
-    plt.show()
-
-    # Correlation analysis
-    correlation_earnings = dataframe['earnings_surprise'].corr(dataframe['Close'])
-    correlation_sentiment = dataframe['sentiment_score'].corr(dataframe['Close'])
-    print(f"Correlation between earnings surprise and stock price: {correlation_earnings}")
-    print(f"Correlation between sentiment score and stock price: {correlation_sentiment}")
-
-    # ACF and PACF plots
-    fig, axes = plt.subplots(1, 2, figsize=(15, 4))
-    plot_acf(dataframe['Close'], ax=axes[0])
-    plot_pacf(dataframe['Close'], ax=axes[1])
-    plt.show()
-
-# Applying the function to both segments
-fit_sarimax_and_plot(pre_pandemic_df, "Pre-Pandemic")
-fit_sarimax_and_plot(post_pandemic_df, "Post-Pandemic")
-There was an error committing your changes: File could not be edited
+print("\nScript terminé. Les sections clés ont été montrées (fetch data, stationarity, ARIMA/SARIMAX, sentiment).")
