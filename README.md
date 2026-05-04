@@ -1,103 +1,214 @@
-#  Hello World 
-Graduated from Columbia University with a M.A in Quantitative Methods in Social Sciences (QMSS), currently in New-York. Find below the various coding assignements I did as part of my time in gradschool alongside to my final thesis. You can find me on [![LinkedIn][3.2]][2]. 
+# QMSS — Columbia University Graduate Portfolio
 
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![FinBERT](https://img.shields.io/badge/NLP-FinBERT-orange?style=flat-square)](https://huggingface.co/yiyanghkust/finbert-tone)
+[![SARIMAX](https://img.shields.io/badge/Time%20Series-SARIMAX-green?style=flat-square)](https://www.statsmodels.org/)
+[![Columbia](https://img.shields.io/badge/Columbia%20University-QMSS%20M.A-lightblue?style=flat-square)](https://qmss.columbia.edu/)
 
-## 📖 Master Thesis
+Coursework and master thesis from the **Quantitative Methods in Social Sciences (QMSS)** M.A. at Columbia University (GPA: 3.92). The repository covers applied work across machine learning, NLP, Bayesian statistics, time series analysis, and data science.
 
-###                     [Master Code](Master%20Thesis)
+---
 
-The study explores the relationship between cognitive biases and investment decisions. Examples include anchoring (doubt about buying a stock) and loss aversion (reluctance to invest based on historical data). Through API extraction on Python, the algorithm retrieves performance data for the five companies with the highest market share in renewable energy from 2014 to 2024.
+## Master Thesis — Earnings Sentiment & Renewable Energy Stock Returns (2014–2023)
 
-The hypothesis validation encompasses three critical components.
+**`/Master_Thesis`**
 
-1) **Sentiment Quantification**: Automated a web crawler to retrieve text corpus from quarterly earning reports, tokenizing it through stemming. Employed the FinBERT model to evaluate nuanced financial words to sentiment scores ranging from -1 to 1.
-   
-3) **Statistical Significance and Output**: Applied an ARIMA regression using daily stock prices correlated to quarterly earnings results and their sentiment variables. Found evidences of hidden price movements independent of company performance through statistical evidence p-value (≥ 0;95) and stochastic factors.
+> *"The Cognitive of Finances: Applying Sentiment Analysis to Time Series in Understanding Shifts in the Renewable Energy Stock Market"*  
+> Columbia University, GSAS — QMSS 5999, December 2023
 
-4) **Model Statistical Diagnosis**: Diagnosed the model to confirm its reliability. Performed data analysis test to look for lags and autocorrelating factors within the time series, ensured proper data extraction, equalizing the residual variables, minimizing deviation, and standard error score.
+### Research Question
 
-Demonstrated a significant relationship between biases over a company and its stock prices during the earning period, finding a decreasing effect before and after the COVID-19 pandemic. Concluded on better trust in emerging renewable technologies due to less impactful sentiment score over time. Asserted for more availability of objective information to drive the investor perception on a company's performance based upon the efficient market hypothesis.
+Does investor sentiment derived from quarterly earnings reports (10-Q) significantly predict stock price movements in renewable energy equities — and does this relationship hold before and after COVID-19?
 
+The study tests whether cognitive biases (anchoring, loss aversion) leave measurable traces in stock prices, challenging the **Efficient Market Hypothesis (EMH)**.
 
-## 📜 Bayesian Statistics
+### Companies Studied
 
-[Lab 1: Normal and Gaussian Density Probability Mass](Bayesian%20Statistics/Lab%201)
+| Ticker | Company | Sector |
+|--------|---------|--------|
+| FSLR | First Solar | Solar Power |
+| GE | General Electric | Hydro / Wind |
+| NEE | NextEra Energy | Wind Power |
+| TSLA | Tesla | Electric Vehicles |
+| PLUG | Plug Power | Hydrogen / Fuel Cells |
 
-[Lab 2: Posterior Information and Beta-Binomial Distribution](Bayesian%20Statistics/Lab%202)
+Data period: **Q1 2014 — Q3 2023** (40 quarterly observations per company)
 
-[Lab 3: Zero-Inflated Poisson and Hierarchal Models with loo-compare benchmarking](Bayesian%20Statistics/Lab%203)
+---
 
+### Pipeline Overview
 
+```
+Earnings Call Text
+  → Web crawler (BeautifulSoup + Google Search top-10 results)
+  → FinBERT-tone sentiment scoring (yiyanghkust/finbert-tone)
+      · Chunked tokenization (512-token windows with CLS/SEP)
+      · Weighted score: Positive (+1) / Negative (-1) / Neutral (0)
+      · Output: continuous sentiment_score ∈ [-1, 1]
+        ↓
+Financial Data (yfinance + Financial Modeling Prep API)
+  → 10-year daily OHLCV prices
+  → Quarterly Surprise EPS = actual − estimated earnings
+        ↓
+Stationarity Tests (ADF + KPSS) per ticker
+        ↓
+SARIMAX Regression (auto_arima order selection)
+  → Long-run: full 2014–2023 period per ticker
+  → Short-run: ±5 days window around each earnings date
+  → Final model: pre-COVID (2014–2020) vs post-COVID (2020–2023)
+        ↓
+Model Diagnostics
+  → Durbin-Watson · Shapiro-Wilk · Ljung-Box · Jarque-Bera
+```
 
+---
 
-## 📊 Data Sciences 
+### Key Results
 
-[Lab 1: Data Visualisation and Manipulation](Data%20Science/Lab%201)
+#### Stationarity Tests
+All five tickers showed **non-stationarity** under ADF (unit root not rejected) and **trend-stationarity** under KPSS, requiring first differencing before modelling.
 
-[Lab 2: Variables Subcategories and Data Labelling](Data%20Science/Lab%202)
+| Ticker | ADF p-value | KPSS p-value |
+|--------|-------------|--------------|
+| GE | 0.687 | 0.032 |
+| NEE | 0.075 | 0.010 |
+| TSLA | 0.998 | 0.015 |
+| PLUG | 0.315 | 0.048 |
+| FSLR | 0.999 | 0.023 |
 
-[Lab 3: Multivariate Regression with Dummy Variables](Data%20Science/Lab%203)
+#### Long-Run SARIMAX — Surprise EPS as predictor
 
-[Lab 4: Regression with Double-Interaction Variables](Data%20Science/Lab%204)
+Auto-ARIMA selected **ARIMA(0,1,0)** for all five tickers — a pure random walk, consistent with weak-form EMH.
 
-[Lab 5: Multiple Linear and Logarithmic Probability Models.](Data%20Science/Lab%205)
+| Ticker | SEPS Coeff | p-value | Durbin-Watson | Shapiro-Wilk p |
+|--------|------------|---------|---------------|----------------|
+| FSLR | −1.001 | 0.855 | 1.302 | 0.118 |
+| GE | −2.717 | 0.381 | 1.153 | ~0.000 |
+| NEE | −14.311 | 0.618 | 1.276 | 0.001 |
+| TSLA | +27.840 | 0.697 | 1.902 | ~0.000 |
+| **PLUG** | **+37.118** | **0.008** | **2.182** | **0.001** |
 
-[Lab 6: First Differences Regression applied on Naive ("pooled") OLS Model](Data%20Science/Lab%206)
+**PLUG is the sole exception**: SEPS is statistically significant (p=0.008) with a positive impact on stock price, suggesting the nascent hydrogen market was less informationally efficient than its peers.
 
-[Midterm](Data%20Science/Midterm)
+#### Final Model — Sentiment + SEPS, SARIMAX(0,2,1)
 
+| Period | Sentiment Coeff | p-value | SEPS Coeff | p-value |
+|--------|-----------------|---------|------------|---------|
+| Pre-COVID (2014–Q1 2020) | **+79.55** | **0.000** | +1.001 | 0.941 |
+| Post-COVID (Q2 2020–2023) | **−90.23** | **0.039** | +75.38 | 0.120 |
 
+**Core finding:**
+- **Pre-COVID**: Sentiment was the primary driver of renewable stock prices (p=0.000). The renewable market's growth was linked to positive cognitive beliefs around the green transition, not earnings fundamentals (SEPS p=0.941).
+- **Post-COVID**: Sentiment **inverted** sign (−90.23, p=0.039) — pandemic-induced macroeconomic disruption altered investor psychology. SEPS gained significance (p improved from 0.941 → 0.120), suggesting a gradual shift toward fundamental-driven investing.
 
+#### Model Diagnostics
 
-## 💡 Machine Learning 
+| Model | Ljung-Box (Q) | Jarque-Bera p | Heterosked. p |
+|-------|---------------|----------------|----------------|
+| Short-run + sentiment | 66.47 (p=0.00) | 0.01 | 0.00 |
+| Pre-COVID final | 36.68 (p=0.00) | 0.63 | 0.09 |
+| Post-COVID final | 23.53 (p=0.00) | **0.97** | **0.38** |
 
-[Lab 1: Pandas-Seaborne Data Manipulation ](Machine%20Learning/lab%201.ipynb)
+Progressive improvement: the post-COVID model achieves near-normal residual distribution (JB p=0.97) and non-significant heteroskedasticity.
 
-[Lab 2: SkLearn Penalized Regression and Classifiers ](Machine%20Learning/Lab%202)
+---
 
-[Lab 3: SkLearn-SciPy K Means and Hierchal Clusters + PCA ](Machine%20Learning/Lab%203.ipynb)
+### Conclusions
 
-[Lab 4: Sklearn-Keras Text Recognition Models and Neural Networks](Machine%20Learning/lab%204.ipynb)
+- All five tickers follow a **random walk** in the long run — consistent with weak-form EMH
+- **Sentiment significantly drove prices pre-COVID** (coeff +79.55, p=0.000), consistent with cognitive biases (anchoring, loss aversion) shaping early renewable market growth
+- **Post-COVID sentiment inverted** (coeff −90.23, p=0.039): positive sentiment now associates with lower prices, reflecting market skepticism and post-pandemic uncertainty
+- **PLUG Power** deviates from EMH with a statistically significant SEPS relationship (p=0.008) — consistent with its nascent stage and low investor coverage pre-2020
+- The increasing SEPS significance post-COVID supports a long-run convergence toward **market efficiency** (Graham's weighing machine, 1965)
 
-[Final](Machine%20Learning/Final.ipynb)
+---
 
+### Tech Stack
 
+| Component | Library / Tool |
+|-----------|---------------|
+| Data ingestion | `yfinance`, `requests` (Financial Modeling Prep API) |
+| Web crawling | Custom `BeautifulSoup` + Google Search crawler |
+| NLP / Sentiment | `transformers` — FinBERT (`yiyanghkust/finbert-tone`, 4.9B token corpus) |
+| Time series modelling | `statsmodels` SARIMAX, `pmdarima` auto_arima |
+| Statistical tests | `scipy.stats` Shapiro-Wilk, `statsmodels` ADF / KPSS / Ljung-Box / Durbin-Watson |
+| Data manipulation | `pandas`, `numpy` |
+| Visualisation | `matplotlib`, `seaborn` |
 
+---
 
-## 🤖 Natural Language Processing 
+### Getting Started
 
-[Lab 1: Python Basics](Natural%20Language%20Processing/Lab%201)
+```bash
+git clone https://github.com/Raeus1901/QMSS.git
+cd QMSS/Master_Thesis
 
-[Lab 2: VADER Token Sentiment Analysis](Natural%20Language%20Processing/Lab%202)
+pip install -r requirements.txt
 
-[Lab 3: NLTK Token Probabililty Classifier](Natural%20Language%20Processing/Lab%203)
+# Set your Financial Modeling Prep API key
+export FMP_API_KEY=your_key_here
 
-[Lab 4: SkLearn Real-Time Reddit Data Classifier](Natural%20Language%20Processing/Lab%204)
+python Master_Thesis.py
+```
 
+**Requirements:** Python 3.9+, ~4GB RAM for FinBERT inference
 
-## 🕸️ Social Network Analysis
+---
 
-[Lab 1: Ego-Network Measures with Regression](Social%20Network%20Analysis/Lab%201)
+## Coursework Modules
 
-[Lab 2: Degree Centrality Measures and Nodes Analysis](Social%20Network%20Analysis/Lab%202)
+### Bayesian Statistics
+| Lab | Topic |
+|-----|-------|
+| Lab 1 | Normal and Gaussian Density, Probability Mass Functions |
+| Lab 2 | Posterior Inference and Beta-Binomial Distribution |
+| Lab 3 | Zero-Inflated Poisson and Hierarchical Models with LOO-CV benchmarking |
 
-[Lab 3: Community Detection Models and Advanced Vizualisation](Social%20Network%20Analysis/Lab%203)
+### Data Science
+| Lab | Topic |
+|-----|-------|
+| Lab 1 | Data Visualisation and Manipulation |
+| Lab 2 | Variable Subcategories and Data Labelling |
+| Lab 3 | Multivariate Regression with Dummy Variables |
+| Lab 4 | Regression with Double-Interaction Variables |
+| Lab 5 | Multiple Linear and Logarithmic Probability Models |
+| Lab 6 | First Differences Regression on Pooled OLS |
 
+### Machine Learning
+| Lab | Topic |
+|-----|-------|
+| Lab 1 | Pandas / Seaborn Data Manipulation |
+| Lab 2 | Scikit-learn Penalized Regression and Classifiers |
+| Lab 3 | K-Means and Hierarchical Clustering + PCA |
+| Lab 4 | Keras Text Recognition and Neural Networks |
+| Final | End-to-end ML pipeline |
 
-## ⏱️ Time Series Analysis 
+### Natural Language Processing
+| Lab | Topic |
+|-----|-------|
+| Lab 1 | Python Fundamentals |
+| Lab 2 | VADER Token Sentiment Analysis |
+| Lab 3 | NLTK Token Probability Classifier |
+| Lab 4 | Scikit-learn Real-Time Reddit Data Classifier |
 
-[Lab 1: Unpooled Regression and Panel Data Analysis](https://github.com/Raeus1901/QMSS/blob/721043e9eb1d4b8ee75f368c9c2a451d762a2ed9/Time%20Series%20Analysis%20/Lab%201)
+### Social Network Analysis
+| Lab | Topic |
+|-----|-------|
+| Lab 1 | Ego-Network Measures with Regression |
+| Lab 2 | Degree Centrality and Node Analysis |
+| Lab 3 | Community Detection Models and Advanced Visualisation |
 
-[Lab 2: Multiple Variable Survival Analysis with Cox Hazard](https://github.com/Raeus1901/QMSS/blob/4f8d3114fd35298bf884c8ac945140e46e28ee71/Time%20Series%20Analysis%20/Lab%202)
+### Time Series Analysis
+| Lab | Topic |
+|-----|-------|
+| Lab 1 | Unpooled Regression and Panel Data |
+| Lab 2 | Survival Analysis with Cox Proportional Hazard |
+| Lab 3 | ARIMA with First Differencing and Trend Decomposition |
 
-[Lab 3: ARIMA Regression with First Differenciation and Trends](https://github.com/Raeus1901/QMSS/blob/4f8d3114fd35298bf884c8ac945140e46e28ee71/Time%20Series%20Analysis%20/Lab%203)
+---
 
+## Author
 
-
-
-
-
-
-
-[3.2]: https://raw.githubusercontent.com/MartinHeinz/MartinHeinz/master/linkedin-3-16.png (LinkedIn icon without padding)
-[2]: https://www.linkedin.com/in/jean-treves-bbaa91257
+**Jean Trèves** — M.A. QMSS, Columbia University (GPA: 3.92)  
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/jean-treves-bbaa91257)
+[![GitHub](https://img.shields.io/badge/GitHub-Raeus1901-black?style=flat-square&logo=github)](https://github.com/Raeus1901)
