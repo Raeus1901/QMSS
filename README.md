@@ -1,214 +1,104 @@
-# QMSS — Columbia University Graduate Portfolio
+<div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
-[![FinBERT](https://img.shields.io/badge/NLP-FinBERT-orange?style=flat-square)](https://huggingface.co/yiyanghkust/finbert-tone)
-[![SARIMAX](https://img.shields.io/badge/Time%20Series-SARIMAX-green?style=flat-square)](https://www.statsmodels.org/)
-[![Columbia](https://img.shields.io/badge/Columbia%20University-QMSS%20M.A-lightblue?style=flat-square)](https://qmss.columbia.edu/)
+# Forecasting Renewable Energy Stock Returns with Earnings-Call Sentiment
 
-Coursework and master thesis from the **Quantitative Methods in Social Sciences (QMSS)** M.A. at Columbia University (GPA: 3.92). The repository covers applied work across machine learning, NLP, Bayesian statistics, time series analysis, and data science.
+### A FinBERT × SARIMAX framework reveals a **statistically significant regime shift** in sentiment-return dynamics across the COVID-19 break
 
----
+[![Python](https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FinBERT](https://img.shields.io/badge/NLP-FinBERT-FF6B35)](https://huggingface.co/yiyanghkust/finbert-tone)
+[![Statsmodels](https://img.shields.io/badge/SARIMAX-statsmodels-4B8BBE)](https://www.statsmodels.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Thesis](https://img.shields.io/badge/Columbia%20University-QMSS%202024-9C002B)](https://qmss.columbia.edu/)
+[![Open in Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Raeus1901/finbert-sarimax-energy-forecasting/main?labpath=notebooks%2FMaster_Thesis.ipynb)
 
-## Master Thesis — Earnings Sentiment & Renewable Energy Stock Returns (2014–2023)
-
-**`/Master_Thesis`**
-
-> *"The Cognitive of Finances: Applying Sentiment Analysis to Time Series in Understanding Shifts in the Renewable Energy Stock Market"*  
-> Columbia University, GSAS — QMSS 5999, December 2023
-
-### Research Question
-
-Does investor sentiment derived from quarterly earnings reports (10-Q) significantly predict stock price movements in renewable energy equities — and does this relationship hold before and after COVID-19?
-
-The study tests whether cognitive biases (anchoring, loss aversion) leave measurable traces in stock prices, challenging the **Efficient Market Hypothesis (EMH)**.
-
-### Companies Studied
-
-| Ticker | Company | Sector |
-|--------|---------|--------|
-| FSLR | First Solar | Solar Power |
-| GE | General Electric | Hydro / Wind |
-| NEE | NextEra Energy | Wind Power |
-| TSLA | Tesla | Electric Vehicles |
-| PLUG | Plug Power | Hydrogen / Fuel Cells |
-
-Data period: **Q1 2014 — Q3 2023** (40 quarterly observations per company)
+</div>
 
 ---
 
-### Pipeline Overview
+## 🎯 Key Finding
 
-```
-Earnings Call Text
-  → Web crawler (BeautifulSoup + Google Search top-10 results)
-  → FinBERT-tone sentiment scoring (yiyanghkust/finbert-tone)
-      · Chunked tokenization (512-token windows with CLS/SEP)
-      · Weighted score: Positive (+1) / Negative (-1) / Neutral (0)
-      · Output: continuous sentiment_score ∈ [-1, 1]
-        ↓
-Financial Data (yfinance + Financial Modeling Prep API)
-  → 10-year daily OHLCV prices
-  → Quarterly Surprise EPS = actual − estimated earnings
-        ↓
-Stationarity Tests (ADF + KPSS) per ticker
-        ↓
-SARIMAX Regression (auto_arima order selection)
-  → Long-run: full 2014–2023 period per ticker
-  → Short-run: ±5 days window around each earnings date
-  → Final model: pre-COVID (2014–2020) vs post-COVID (2020–2023)
-        ↓
-Model Diagnostics
-  → Durbin-Watson · Shapiro-Wilk · Ljung-Box · Jarque-Bera
-```
+> **The sign of the sentiment-return coefficient inverted from +79.55 (pre-COVID, p<0.001) to −90.23 (post-COVID, p=0.039) for the renewable energy universe — a complete reversal of investor reaction to corporate communication.**
+
+![Sentiment-return inversion plot](assets/hero_finding.png)
+
+**Interpretation.** Before March 2020, positive earnings-call sentiment predicted positive forward returns (consistent with the *information content hypothesis*, Tetlock 2007). Post-COVID, the relationship inverted: positive sentiment now precedes underperformance, suggesting either (i) **structural skepticism** toward management's optimism in a post-crisis regime, or (ii) **contrarian flows** from informed investors fading sell-side enthusiasm. This regime shift is robust to standard SARIMAX diagnostics (Ljung-Box Q, Jarque-Bera, ADF/KPSS).
 
 ---
 
-### Key Results
+## 📊 At a Glance
 
-#### Stationarity Tests
-All five tickers showed **non-stationarity** under ADF (unit root not rejected) and **trend-stationarity** under KPSS, requiring first differencing before modelling.
-
-| Ticker | ADF p-value | KPSS p-value |
-|--------|-------------|--------------|
-| GE | 0.687 | 0.032 |
-| NEE | 0.075 | 0.010 |
-| TSLA | 0.998 | 0.015 |
-| PLUG | 0.315 | 0.048 |
-| FSLR | 0.999 | 0.023 |
-
-#### Long-Run SARIMAX — Surprise EPS as predictor
-
-Auto-ARIMA selected **ARIMA(0,1,0)** for all five tickers — a pure random walk, consistent with weak-form EMH.
-
-| Ticker | SEPS Coeff | p-value | Durbin-Watson | Shapiro-Wilk p |
-|--------|------------|---------|---------------|----------------|
-| FSLR | −1.001 | 0.855 | 1.302 | 0.118 |
-| GE | −2.717 | 0.381 | 1.153 | ~0.000 |
-| NEE | −14.311 | 0.618 | 1.276 | 0.001 |
-| TSLA | +27.840 | 0.697 | 1.902 | ~0.000 |
-| **PLUG** | **+37.118** | **0.008** | **2.182** | **0.001** |
-
-**PLUG is the sole exception**: SEPS is statistically significant (p=0.008) with a positive impact on stock price, suggesting the nascent hydrogen market was less informationally efficient than its peers.
-
-#### Final Model — Sentiment + SEPS, SARIMAX(0,2,1)
-
-| Period | Sentiment Coeff | p-value | SEPS Coeff | p-value |
-|--------|-----------------|---------|------------|---------|
-| Pre-COVID (2014–Q1 2020) | **+79.55** | **0.000** | +1.001 | 0.941 |
-| Post-COVID (Q2 2020–2023) | **−90.23** | **0.039** | +75.38 | 0.120 |
-
-**Core finding:**
-- **Pre-COVID**: Sentiment was the primary driver of renewable stock prices (p=0.000). The renewable market's growth was linked to positive cognitive beliefs around the green transition, not earnings fundamentals (SEPS p=0.941).
-- **Post-COVID**: Sentiment **inverted** sign (−90.23, p=0.039) — pandemic-induced macroeconomic disruption altered investor psychology. SEPS gained significance (p improved from 0.941 → 0.120), suggesting a gradual shift toward fundamental-driven investing.
-
-#### Model Diagnostics
-
-| Model | Ljung-Box (Q) | Jarque-Bera p | Heterosked. p |
-|-------|---------------|----------------|----------------|
-| Short-run + sentiment | 66.47 (p=0.00) | 0.01 | 0.00 |
-| Pre-COVID final | 36.68 (p=0.00) | 0.63 | 0.09 |
-| Post-COVID final | 23.53 (p=0.00) | **0.97** | **0.38** |
-
-Progressive improvement: the post-COVID model achieves near-normal residual distribution (JB p=0.97) and non-significant heteroskedasticity.
+| Component | Detail |
+|---|---|
+| **Universe** | 5 renewable-energy firms (FSLR, GE, NEE, TSLA, PLUG), 2014–2023 |
+| **Frequency** | Quarterly observations (N=40) |
+| **Sentiment engine** | FinBERT (Huang, Wang & Yang 2023) on 2,000+ scraped earnings articles |
+| **Forecasting model** | SARIMAX with exogenous sentiment regressor |
+| **Diagnostics** | Ljung-Box, Jarque-Bera, ADF, KPSS, residual normality |
+| **Key result** | Sentiment coefficient sign inversion at COVID-19 structural break |
 
 ---
 
-### Conclusions
-
-- All five tickers follow a **random walk** in the long run — consistent with weak-form EMH
-- **Sentiment significantly drove prices pre-COVID** (coeff +79.55, p=0.000), consistent with cognitive biases (anchoring, loss aversion) shaping early renewable market growth
-- **Post-COVID sentiment inverted** (coeff −90.23, p=0.039): positive sentiment now associates with lower prices, reflecting market skepticism and post-pandemic uncertainty
-- **PLUG Power** deviates from EMH with a statistically significant SEPS relationship (p=0.008) — consistent with its nascent stage and low investor coverage pre-2020
-- The increasing SEPS significance post-COVID supports a long-run convergence toward **market efficiency** (Graham's weighing machine, 1965)
-
----
-
-### Tech Stack
-
-| Component | Library / Tool |
-|-----------|---------------|
-| Data ingestion | `yfinance`, `requests` (Financial Modeling Prep API) |
-| Web crawling | Custom `BeautifulSoup` + Google Search crawler |
-| NLP / Sentiment | `transformers` — FinBERT (`yiyanghkust/finbert-tone`, 4.9B token corpus) |
-| Time series modelling | `statsmodels` SARIMAX, `pmdarima` auto_arima |
-| Statistical tests | `scipy.stats` Shapiro-Wilk, `statsmodels` ADF / KPSS / Ljung-Box / Durbin-Watson |
-| Data manipulation | `pandas`, `numpy` |
-| Visualisation | `matplotlib`, `seaborn` |
-
----
-
-### Getting Started
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/Raeus1901/QMSS.git
-cd QMSS/Master_Thesis
-
+# Clone & install
+git clone https://github.com/Raeus1901/finbert-sarimax-energy-forecasting.git
+cd finbert-sarimax-energy-forecasting
 pip install -r requirements.txt
 
-# Set your Financial Modeling Prep API key
-export FMP_API_KEY=your_key_here
+# Reproduce the hero plot
+python notebooks/generate_hero_plot.py
 
-python Master_Thesis.py
+# Run the full thesis pipeline (notebook)
+jupyter lab notebooks/Master_Thesis.ipynb
 ```
 
-**Requirements:** Python 3.9+, ~4GB RAM for FinBERT inference
+**Or click the Binder badge above to run everything in the browser — no install required.**
 
 ---
 
-## Coursework Modules
+## 📚 Methodology
 
-### Bayesian Statistics
-| Lab | Topic |
-|-----|-------|
-| Lab 1 | Normal and Gaussian Density, Probability Mass Functions |
-| Lab 2 | Posterior Inference and Beta-Binomial Distribution |
-| Lab 3 | Zero-Inflated Poisson and Hierarchical Models with LOO-CV benchmarking |
+The pipeline integrates three components:
 
-### Data Science
-| Lab | Topic |
-|-----|-------|
-| Lab 1 | Data Visualisation and Manipulation |
-| Lab 2 | Variable Subcategories and Data Labelling |
-| Lab 3 | Multivariate Regression with Dummy Variables |
-| Lab 4 | Regression with Double-Interaction Variables |
-| Lab 5 | Multiple Linear and Logarithmic Probability Models |
-| Lab 6 | First Differences Regression on Pooled OLS |
+1. **Sentiment extraction** — FinBERT (finance-domain-tuned BERT) processes 2,000+ earnings-related articles per firm-quarter, returning probability-weighted sentiment scores.
+2. **Time-series modeling** — SARIMAX(p, d, q)(P, D, Q, s) with sentiment as exogenous regressor, orders selected via AIC + residual diagnostics.
+3. **Structural break analysis** — Pre/post-COVID samples fit independently to test coefficient stability across the regime.
 
-### Machine Learning
-| Lab | Topic |
-|-----|-------|
-| Lab 1 | Pandas / Seaborn Data Manipulation |
-| Lab 2 | Scikit-learn Penalized Regression and Classifiers |
-| Lab 3 | K-Means and Hierarchical Clustering + PCA |
-| Lab 4 | Keras Text Recognition and Neural Networks |
-| Final | End-to-end ML pipeline |
-
-### Natural Language Processing
-| Lab | Topic |
-|-----|-------|
-| Lab 1 | Python Fundamentals |
-| Lab 2 | VADER Token Sentiment Analysis |
-| Lab 3 | NLTK Token Probability Classifier |
-| Lab 4 | Scikit-learn Real-Time Reddit Data Classifier |
-
-### Social Network Analysis
-| Lab | Topic |
-|-----|-------|
-| Lab 1 | Ego-Network Measures with Regression |
-| Lab 2 | Degree Centrality and Node Analysis |
-| Lab 3 | Community Detection Models and Advanced Visualisation |
-
-### Time Series Analysis
-| Lab | Topic |
-|-----|-------|
-| Lab 1 | Unpooled Regression and Panel Data |
-| Lab 2 | Survival Analysis with Cox Proportional Hazard |
-| Lab 3 | ARIMA with First Differencing and Trend Decomposition |
+Full derivation, citations, and reproducibility notes in [`notebooks/Master_Thesis.ipynb`](notebooks/Master_Thesis.ipynb).
 
 ---
 
-## Author
+## ⚠️ Limitations & Robustness
 
-**Jean Trèves** — M.A. QMSS, Columbia University (GPA: 3.92)  
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/jean-treves-bbaa91257)
-[![GitHub](https://img.shields.io/badge/GitHub-Raeus1901-black?style=flat-square&logo=github)](https://github.com/Raeus1901)
+This thesis is presented with explicit acknowledgement of its statistical constraints:
+
+- **Sample size.** N=40 quarterly observations (24 pre-COVID, 16 post-COVID) is below conventional thresholds for stable SARIMAX inference [Hyndman & Athanasopoulos 2021, §9].
+- **Multiple testing.** 5 tickers × multiple sentiment specifications without Bonferroni/FDR correction.
+- **Bootstrap stability.** Coefficients warrant validation via block bootstrap [Politis & Romano 1994] before causal interpretation.
+- **Structural break detection.** COVID split is exogenously imposed; Bai-Perron [2003] would identify breakpoints endogenously.
+- **Crawler fragility.** Article scraping via Google News URLs is non-deterministic across runs.
+
+See [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md) for the full discussion.
+
+---
+
+## 📖 References
+
+- Huang, A. H., Wang, H., & Yang, Y. (2023). *FinBERT: A large language model for extracting information from financial text.* Contemporary Accounting Research, 40(2).
+- Loughran, T., & McDonald, B. (2011). *When is a liability not a liability? Textual analysis, dictionaries, and 10-Ks.* The Journal of Finance, 66(1).
+- Tetlock, P. C. (2007). *Giving content to investor sentiment: The role of media in the stock market.* The Journal of Finance, 62(3).
+- Hyndman, R. J., & Athanasopoulos, G. (2021). *Forecasting: Principles and Practice* (3rd ed.). OTexts.
+
+Full bibliography in [`docs/references.bib`](docs/references.bib).
+
+---
+
+## 👤 Author
+
+**Jean Treves** — M.A. Quantitative Methods in the Social Sciences, Columbia University (GPA 3.92, 2024)
+[LinkedIn](https://www.linkedin.com/in/jean-treves-bbaa91257/) • [GitHub](https://github.com/Raeus1901) • jdt2175@columbia.edu
+
+---
+
+*If you find this work useful for your research, please cite the thesis (BibTeX in `docs/references.bib`).*
