@@ -73,7 +73,7 @@ Full derivation, citations, and reproducibility notes in [`notebooks/Master_Thes
 
 This thesis is presented with explicit acknowledgement of its statistical constraints:
 
-- **Sample size.** N=40 quarterly observations (24 pre-COVID, 16 post-COVID) is below conventional thresholds for stable SARIMAX inference [Hyndman & Athanasopoulos 2021, §9].
+- **Sample size.** N=114 pooled observations pre-COVID (5 firms × ~23 quarters), N=77 post-COVID (5 firms × ~16 quarters) is below conventional thresholds for stable SARIMAX inference [Hyndman & Athanasopoulos 2021, §9].
 - **Multiple testing.** 5 tickers × multiple sentiment specifications without Bonferroni/FDR correction.
 - **Bootstrap stability.** Coefficients warrant validation via block bootstrap [Politis & Romano 1994] before causal interpretation.
 - **Structural break detection.** COVID split is exogenously imposed; Bai-Perron [2003] would identify breakpoints endogenously.
