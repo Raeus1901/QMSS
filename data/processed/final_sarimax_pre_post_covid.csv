@@ -1,0 +1,3 @@
+period,sarimax_order,sentiment_coef,sentiment_std_err,sentiment_zvalue,sentiment_pvalue,seps_coef,seps_pvalue,sigma2,n_obs,log_likelihood,aic,bic,ljung_box_q,jarque_bera,heteroskedasticity_h,skew,kurtosis,prob_q,prob_jb,prob_h
+pre_covid,"(0,2,1)",79.5547,16.840,4.724,0.000,1.0008,0.941,5029.7663,114,-636.625,1261.405,1272.205,36.68,0.91,0.56,0.20,2.82,0.00,0.63,0.09
+post_covid,"(0,2,1)",-90.2297,43.614,-2.069,0.039,75.3766,0.120,14400.00,77,-454.625,917.389,926.551,23.53,0.07,1.44,-0.05,2.89,0.00,0.97,0.38

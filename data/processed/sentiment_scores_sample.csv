@@ -1,0 +1,21 @@
+ticker,quarter_query,sentiment_score,quarter_label,year,article_count_estimated
+FSLR,First Solar third quarter 2023 results,0.347,Q3,2023,10
+FSLR,First Solar second quarter 2023 results,0.412,Q2,2023,10
+FSLR,First Solar first quarter 2023 results,0.298,Q1,2023,10
+FSLR,First Solar fourth quarter 2022 results,0.156,Q4,2022,10
+FSLR,First Solar first quarter 2020 results,-0.234,Q1,2020,10
+FSLR,First Solar fourth quarter 2019 results,0.523,Q4,2019,10
+GE,General Electric third quarter 2023 results,0.187,Q3,2023,10
+GE,General Electric second quarter 2023 results,0.221,Q2,2023,10
+GE,General Electric first quarter 2020 results,-0.412,Q1,2020,10
+NEE,NextEra third quarter 2023 results,0.301,Q3,2023,10
+NEE,NextEra first quarter 2020 results,0.000,Q1,2020,10
+NEE,NextEra fourth quarter 2014 results,0.000,Q4,2014,10
+TSLA,Tesla third quarter 2023 results,-0.089,Q3,2023,10
+TSLA,Tesla second quarter 2023 results,0.156,Q2,2023,10
+TSLA,Tesla first quarter 2020 results,-0.387,Q1,2020,10
+PLUG,Plug Power third quarter 2023 results,-0.412,Q3,2023,10
+PLUG,Plug Power second quarter 2023 results,0.231,Q2,2023,10
+PLUG,Plug Power first quarter 2020 results,-0.298,Q1,2020,10
+PLUG,Plug Power fourth quarter 2020 results,0.567,Q4,2020,10
+PLUG,Plug Power third quarter 2014 results,0.000,Q3,2014,10
