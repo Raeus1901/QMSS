@@ -1,0 +1,6 @@
+ticker,adf_stat,adf_pvalue,adf_obs_used,kpss_stat,kpss_pvalue,kpss_lags,conclusion
+GE,-1.169379,0.687,39,0.542073,0.032191,4,non-stationary (ADF) + trend-stationary (KPSS) — first differencing required
+NEE,-2.695509,0.075,29,0.830489,0.010,4,non-stationary (ADF) + trend-stationary (KPSS) — first differencing required
+TSLA,1.680714,0.998,30,0.686736,0.014751,4,non-stationary (ADF) + trend-stationary (KPSS) — first differencing required
+PLUG,-1.937458,0.315,36,0.470502,0.04831,4,non-stationary (ADF) + trend-stationary (KPSS) — first differencing required
+FSLR,2.264536,0.999,31,0.592343,0.023332,4,non-stationary (ADF) + trend-stationary (KPSS) — first differencing required
